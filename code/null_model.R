@@ -4,6 +4,14 @@ library(stringr)
 library(spatstat)
 library(ggplot2)
 
+####################### NULL MODEL ##########################
+# In the case of the ppjsdm model, the null model is where individual do not have an identity.
+# This means that the individuals do not have a species, size, or any type of label - all individuals are in the SAME, ONE group. 
+# i.e. We do not set a type when setting the configuration 
+# This allows us to understand if there is more or less clustering or replusion occurring compared to the Poisson point process where all points are independent of each other 
+# Furthermore we can understand which sites have more replusion or clustering than others 
+
+
 # Load cleaned data 
 data_c <- read.csv("data/data_cleaned.csv")
 

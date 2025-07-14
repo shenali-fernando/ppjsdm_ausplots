@@ -20,7 +20,10 @@ data <- data[data$Tree_Condition == "Alive", ]
 #We only want the first stem - get rid of Tree IDs that end in b, c, d,e, f  
 data_c <- data %>% filter(!str_detect(Tree_ID, "(a|b|c|d|e|f)$"))
 data_c %>% count(Tree_ID) #check if its done       
-  
+
+#save out dataframe for easy access 
+write.csv(data_c, "C:/Users/shena/Desktop/ausplots/ppjsdm_ausplots/data/data_cleaned.csv")
+
 # Some rows have a crown class value! 
 cc <- data %>% filter(!Crown_Class == "")
 cc %>% count(Site_Name)
@@ -36,6 +39,7 @@ supersite <- supersite %>% filter(Ausplot_X <= 100)
 configuration<- ppjsdm::Configuration(supersite$Ausplot_X, supersite$Ausplot_Y, supersite$Genus_Species)
 plot(configuration)
 
+#Check the species by crown class divisions of some plots
 supersite2 <- supersite %>% group_by(Genus_Species, Crown_Class) %>% 
   count()
 supersite2
@@ -51,16 +55,33 @@ tinebank2 <- tinebank %>% group_by(Genus_Species, Crown_Class) %>%
 
 
 #Bruxner
-bruxner <- data %>% filter(Site_Name == "Bruxner")
-bruxner2 <- bruxner %>% group_by(Genus_Species, Crown_Class) %>% 
+a <- data %>% filter(Site_Name == "Tinebank") %>% group_by(Genus_Species) %>% 
   count()
 
+e <- data_c %>% filter(Site_Name == "BondTier")
+bond_d <- bond %>% filter(Crown_Class == "Dominant") 
+bond_c <- bond %>% filter(Crown_Class == "Co-dominant") 
+bond_i <- bond %>% filter(Crown_Class == "Intermediate") 
+bond_s <- bond %>% filter(Crown_Class == "Suppressed") 
+bond_s %>% count(Diameter)
+par(mfrow = c(2, 2))
+d <- hist(bond_d$Diameter)
+c <- hist(bond_c$Diameter)
+i <- hist(bond_i$Diameter)
+s <- hist(bond_s$Diameter)
 
+
+dip <- data_c %>% filter(Site_Name == "Dip")
+hist(dip$Diameter, xlim = c(0, 100))
 
 #Weeaproinah site - has a good subdivision of species into crown classes 
 wee <- data %>% filter(Site_Name == "Weeaproinah")
 wee2 <- wee %>% group_by(Genus_Species, Crown_Class) %>% 
   count()
+
+
+
+
 
 
 wee_c <- wee %>% group_by(Genus_Species, Crown_Class) %>% 

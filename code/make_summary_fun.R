@@ -30,11 +30,7 @@ create_list_of_fits <- function(...,
 
 access_coefficient <- function(fits,
                                coefficient) {
-  if("gamma" == coefficient[1] & length(coefficient) == 1) { # The requested coefficient is gamma
-    identification <- "gamma"
-    access <- function(obj) base::list(obj[["gamma"]])
-    index <- NULL
-  } else {
+  
     is_alpha <- gsub("^alpha([0-9]*)", "\\1", coefficient)
     if("" == is_alpha[1] & length(is_alpha) == 1) { # it starts with alpha, but has no integer afterwards
       index <- seq_len(max(sapply(fits, function(fit) {
@@ -77,7 +73,6 @@ access_coefficient <- function(fits,
         }
       }
     }
-  }
   
   list(access = access,
        identification = identification,
@@ -116,9 +111,9 @@ convert_names <- function(x,
 
 
 #just adding defaults and get rid of how argument because confusing
-make_sum_df <- function(fits,
+make_sum_df <- function(fits, #Must be a list of fits
                         coefficient = "alpha",
-                        summ,
+                        summ, # Must be a list of sums 
                         only_statistically_significant = FALSE,
                         which = "all",
                         full_names = NULL,
@@ -307,6 +302,15 @@ make_sum_df <- function(fits,
 
 # 
 # ## Test function
-# df1 <- make_sum_df(fits = list("ANU101" = fit_anu101, "ANU363" = fit_anu363),
-#             summ = list(sum_anu101, sum_anu363),
-#             coefficient = "alpha")
+df1 <- make_sum_df(fits = list("ANU101" = fit_anu101_2, "ANU363" = fit_anu363),
+            summ = list(sum_anu101_2, sum_anu363),
+            coefficient = "alpha")
+
+
+fits <- anu101$fit
+sum <- anu101$sum
+
+df2 <- make_sum_df(fits = list(fits), 
+                   summ = list(sum))
+
+

@@ -1,0 +1,659 @@
+---
+title: "Crown Class - Ausplot"
+format: html
+editor: visual
+---
+
+```{r}
+library(dpylr)
+library(ppjsdm)
+library(ggbeeswarm)
+library(spatstat.explore)
+library(stringr)
+```
+
+## Ausplot - Crown Classes
+
+Grouping individuals as eucalypt v non-eucalypt and then into their crown classes and then running ppjsdm analysisLoad Data
+
+```{r}
+data_cleaned <- read_csv("data/data_cleaned.csv")
+```
+
+### Source useful functions
+
+```{r}
+source(make_model_fun.R) 
+source(make_summary_fun.R)
+```
+
+### Run models
+
+Create vector of Site Names
+
+```{r}
+ sites <- unique(data_cleaned$Site_Name) 
+ sites <- sites[!sites %in% c("Dip", "Bird", "Flowerdale")]
+
+```
+
+Run the crown class level model for all sites
+
+```{r}
+#make empty df to send results
+full_df_com <- data.frame(matrix(ncol = 9, nrow = 0))
+colnames(full_df_com) <- c("from", "to", "alpha", "lo", "hi", "lo_numerical",
+                         "hi_numerical", "Potential", "site")
+
+for(i in sites){ 
+  
+ ccmodel <- site_ccmodel(site = i, 
+                         group_cd = TRUE, #should we group c and d together
+                         threshold_noneuc = 8, #threshold to exclude non-euc groups
+                         threshold_euc = 8, #threshold to exclude euc groups
+                         short_range = 8) #run site_ccmodel function
+ 
+ working_df <- make_sum_df(fits = list(ccmodel$fit), #use make_summary_df function to output summary as df 
+                           summ = list(ccmodel$sum))
+ 
+ working_df <- working_df %>% mutate(site = i) #set new column for site name 
+ 
+ full_df_com <- rbind(full_df_com, working_df) #bind into larger df 
+  
+  }
+  
+```
+
+I want to add how many individuals are in each group to the dataframe
+
+```{r}
+inds_full <- data.frame(matrix(ncol = 3, nrow = 0))
+colnames(inds_full) <- c("new_cc", "n", "site_name")
+
+for(i in sites){ #do all sites at once and send into df 
+  
+  inds <- find_ind(site = i, 
+                   group_cd = TRUE, 
+                   threshold_noneuc = 8, 
+                   threshold_euc = 8) #function above
+  
+  inds <- inds %>% mutate(site_name = i) #set new column called site_name for site 
+  
+  inds_full <- rbind(inds_full, inds) #bind into larger df 
+}
+```
+
+Creating some new columns for easier plotting
+
+```{r}
+full_df_com <- full_df_com %>% 
+  mutate(class_from = gsub("^[^ ]+ ", "\\1", from)) %>% 
+  mutate(class_to = gsub("^[^ ]+ ", "\\1", to)) %>% #same for euc or non-euc 
+  mutate(species_from = gsub("^([^ ]+).*", "\\1", from)) %>% 
+  mutate(species_to = gsub("^([^ ]+).*", "\\1", to))
+
+full_df_com <- full_df_com %>% ## and move site to the front to make it easier 
+  relocate(site)
+```
+
+Rename inds_full dataframe to join it
+
+```{r}
+inds_full <- inds_full %>% 
+  rename(to = from) 
+
+full_df_com <- full_df_com %>%
+  left_join(inds_full, by = c("site", "from")) 
+
+full_df_com <- full_df_com %>% 
+  rename(ind_from = n)
+```
+
+Lovely. I want to make sure that no unreasonably large confidence intervals exist in the dataframe. Unreasonably large are those CI's with a range more than 5 (this is as a strong effect is more than absolute 0.5).
+
+```{r}
+full_df_com <- full_df_com %>% 
+  mutate(range_ci = hi - lo)
+```
+
+```{r}
+large_ci <- full_df_com %>% 
+  filter(range_ci > 5)
+```
+
+There are 3 problem sites: BirdTree, Collins and Koombooloomba. We need to go through each of them and rerun the model with the adjusted groups of individuals.
+
+BirdTree
+
+```{r}
+birdtree <- data_cleaned %>% filter(Site_Name == "BirdTree")
+
+birdtree <- birdtree %>% 
+  mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
+  mutate(new_cc = paste(species, Crown_Class))%>% 
+  mutate(new_cc = if_else(new_cc == "Eucalyptus Emergent", "Eucalyptus Dominant", new_cc)) %>% 
+  mutate(new_cc = if_else(new_cc %in% c("Eucalyptus Co-dominant", "Eucalyptus Dominant"), "Eucalyptus Co/dominant", new_cc)) %>% 
+  mutate(new_cc = if_else(new_cc %in% c("Non-euc Co-dominant", "Non-euc Dominant"), "Non-euc Co/dominant", new_cc)) %>% 
+  filter(!new_cc %in% c("Non-euc Co/dominant", "Non-euc Intermediate", "Eucalyptus Intermediate")) #Euc intermediate is the problem that wasn't removed last time 
+
+
+birdtree %>%  count(new_cc)
+
+
+birdtree <- birdtree %>%
+  group_by(Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
+  mutate(
+    is_duplicated = n() > 1, #create column of TRUE/FALSE 
+    #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
+    x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
+    y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
+  ) %>%
+  ungroup() 
+
+
+configuration<- Configuration(birdtree$x_jitter, birdtree$y_jitter, types = birdtree$new_cc) #make config 
+
+# Set parameters
+window <- ppjsdm::Rectangle_window(c(0, 100), c(0,100))
+nspecies <- length(levels(configuration$types))
+short_range <- matrix(8, nspecies, nspecies)
+model <- "exponential"
+
+fit_birdtree <- ppjsdm::gibbsm(configuration = configuration, #do the fit 
+                           window = window,
+                           short_range = short_range, 
+                           model = "exponential", 
+                           saturation = 10, 
+                           nthreads = 4, 
+                           fitting_package = "glmnet",
+                           dummy_distribution = "stratified",
+                           min_dummy = 1, dummy_factor = 1e10, 
+                           max_dummy = 1e3)
+
+sum_birdtree <- summary(fit_birdtree)
+```
+
+Collins
+
+```{r}
+collins <- data_cleaned %>% filter(Site_Name == "Collins")
+
+collins <- collins %>% 
+  mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
+  mutate(new_cc = paste(species, Crown_Class))%>% 
+  mutate(new_cc = if_else(new_cc == "Eucalyptus Emergent", "Eucalyptus Dominant", new_cc)) %>% 
+  mutate(new_cc = if_else(new_cc %in% c("Eucalyptus Co-dominant", "Eucalyptus Dominant"), "Eucalyptus Co/dominant", new_cc)) %>% 
+  mutate(new_cc = if_else(new_cc %in% c("Non-euc Co-dominant", "Non-euc Dominant"), "Non-euc Co/dominant", new_cc)) %>% 
+  filter(!new_cc ==  "Eucalyptus Intermediate") #Euc intermediate is the problem that wasn't removed last time 
+
+
+collins %>%  count(new_cc)
+
+configuration<- Configuration(collins$Ausplot_X, collins$Ausplot_Y, types = collins$new_cc) #make config 
+
+# Set parameters
+window <- ppjsdm::Rectangle_window(c(0, 100), c(0,100))
+nspecies <- length(levels(configuration$types))
+short_range <- matrix(8, nspecies, nspecies)
+model <- "exponential"
+
+fit_collins <- ppjsdm::gibbsm(configuration = configuration, #do the fit 
+                           window = window,
+                           short_range = short_range, 
+                           model = "exponential", 
+                           saturation = 10, 
+                           nthreads = 4, 
+                           fitting_package = "glmnet",
+                           dummy_distribution = "stratified",
+                           min_dummy = 1, dummy_factor = 1e10, 
+                           max_dummy = 1e3)
+
+sum_collins <- summary(fit_collins)
+```
+
+Koombooloomba
+
+```{r}
+koo <- data_cleaned %>% filter(Site_Name == "Koombooloomba")
+
+koo <- koo %>% 
+  mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
+  mutate(new_cc = paste(species, Crown_Class))%>% 
+  mutate(new_cc = if_else(new_cc == "Eucalyptus Emergent", "Eucalyptus Dominant", new_cc)) %>% 
+  mutate(new_cc = if_else(new_cc %in% c("Eucalyptus Co-dominant", "Eucalyptus Dominant"), "Eucalyptus Co/dominant", new_cc)) %>% 
+  mutate(new_cc = if_else(new_cc %in% c("Non-euc Co-dominant", "Non-euc Dominant", "Non-euc Emergent"), "Non-euc Co/dominant", new_cc)) %>% 
+  filter(!new_cc == "Eucalyptus Suppressed")
+
+
+koo %>%  count(new_cc)
+
+
+koo <- koo %>%
+  group_by(Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
+  mutate(
+    is_duplicated = n() > 1, #create column of TRUE/FALSE 
+    #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
+    x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
+    y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
+  ) %>%
+  ungroup() 
+
+
+configuration<- Configuration(koo$x_jitter, koo$y_jitter, types = koo$new_cc) #make config 
+
+# Set parameters
+window <- ppjsdm::Rectangle_window(c(0, 100), c(0,100))
+nspecies <- length(levels(configuration$types))
+short_range <- matrix(8, nspecies, nspecies)
+model <- "exponential"
+
+fit_koo <- ppjsdm::gibbsm(configuration = configuration, #do the fit 
+                           window = window,
+                           short_range = short_range, 
+                           model = "exponential", 
+                           saturation = 10, 
+                           nthreads = 4, 
+                           fitting_package = "glmnet",
+                           dummy_distribution = "stratified",
+                           min_dummy = 1, dummy_factor = 1e10, 
+                           max_dummy = 1e3)
+
+sum_koo <- summary(fit_koo)
+```
+
+Put these three sites into a dataframe:
+
+```{r}
+df <- make_sum_df(fits = list(BirdTree = fit_birdtree, 
+                              Collins = fit_collins, 
+                              Koombooloomba = fit_koo), 
+                  coefficient = "alpha",
+                  summ = list(sum_birdtree, sum_collins, sum_koo))
+
+#Have to make it the same as the full_df before rbind
+
+df <- df %>% 
+  relocate(site) %>% 
+  mutate(class_from = gsub("^[^ ]+ ", "\\1", from)) %>% 
+  mutate(class_to = gsub("^[^ ]+ ", "\\1", to)) %>% #same for euc or non-euc 
+  mutate(species_from = gsub("^([^ ]+).*", "\\1", from)) %>% 
+  mutate(species_to = gsub("^([^ ]+).*", "\\1", to))
+
+
+df <- df %>% 
+  mutate(range_ci = hi - lo)
+
+df %>% 
+  filter(range_ci > 5) #check there are no large cis
+```
+
+Remove the three sites from the full_df
+
+```{r}
+full_df_com <- full_df_com %>% 
+  filter(!site %in% c("BirdTree", "Collins", "Koombooloomba"))
+
+full_df_com %>% count(site)
+```
+
+Now make the final df
+
+```{r}
+final_ccmod <- rbind(full_df_com, df)
+```
+
+Save out df
+
+```{r}
+write.csv(final_ccmod, "final_ccmod.csv")
+```
+
+Make a euc interaction only df
+
+```{r}
+eucs <- final_ccmod %>% 
+  filter(species_from == "Eucalyptus") %>% 
+  filter(species_to == "Eucalyptus") %>% 
+  mutate(class_int = paste0(class_from, sep ="_", class_to))
+```
+
+Need to add significance column:\
+
+```{r}
+eucs <- eucs %>% 
+  mutate(sig = ifelse((lo > 0 | hi < 0), 1, NA )) %>% 
+  mutate(fill_col = ifelse(sig == 1, as.character(dom_euc), NA))
+```
+
+### Visualisation
+
+Now we have a dataframe with all the data from the fits we can start visualisation
+
+#### Scatterplots
+
+```{r}
+colours <- hcl.colors(7, "Viridis")
+
+scatterplot <- ggplot() +
+geom_vline(xintercept = 0, colour = "red", linewidth = .5) +
+  geom_beeswarm(data = eucs, 
+                aes(x = alpha, 
+                    y = class_int, 
+                    fill = fill_col, 
+                    colour = dom_euc, 
+                    text = paste("alpha:", alpha, "<br>", 
+                                 "class int:", class_int, "<br>", 
+                                 "dom euc:", dom_euc)), 
+                 shape = 21, 
+                size = 4,
+                 alpha = 0.8) +
+                  scale_color_manual(values = colours,
+                                     name = "Dom Euc") + 
+                  scale_fill_manual(values = colours,
+                    na.value = "white", 
+                    guide = "none") + 
+  theme_bw() + 
+   guides(colour = guide_legend(override.aes = 
+                                 list(fill = colours, 
+                                      size = 3) ) ) + 
+  ylab("") 
+scatterplot
+```
+
+```{r}
+library(plotly)
+ggplotly(scatterplot
+         , tooltip = "text")
+```
+
+#### Box Plot
+
+Suppressed - Suppressed
+
+```{r}
+sup <- eucs %>% 
+  filter(class_int == "Suppressed_Suppressed") %>% 
+  mutate(fill_col = ifelse(sig == 1, as.character(dom_euc), NA)) %>% 
+  arrange(dom_euc, alpha) %>% 
+  mutate(site = factor(site, levels = unique(site))) 
+
+ggplot(sup, aes(x = alpha, 
+                y = site, 
+                colour = dom_euc, 
+                fill = fill_col)) + 
+  geom_vline(xintercept = 0, 
+             colour = "red", 
+             linetype = "dashed") +
+  geom_errorbar(aes(xmin = lo, 
+                    xmax = hi),
+                size = 1.5) + 
+  geom_point(shape = 21,
+             size = 3) + 
+  scale_colour_manual(values = c("#ED90A4", "#D3A263", "#99B657", "#33C192", "#00BDCE", "#94A9EC", "#DC91DB"), 
+                      name = "Dominant Eucalypt") + 
+  scale_fill_manual(values = c("#ED90A4", "#D3A263", "#99B657", "#00BDCE", "#94A9EC", "#DC91DB"), 
+                    na.value = "white", 
+                    guide = "none") +
+  labs(x = "Alpha Coefficient (+/-95% CI)",
+       y = "") + 
+  scale_y_discrete(limits = rev) + #more making order right
+  ggtitle("Suppressed_Suppressed") +
+  theme_bw() + 
+  guides(colour = guide_legend(override.aes = 
+                                 list(fill = colours, 
+                                      size = 2) ) ) 
+```
+
+Co/dominant - Co/dominant
+
+```{r}
+colours <- hcl.colors(7, "Set2")
+
+codom <- eucs %>% 
+  filter(class_int == "Co/dominant_Co/dominant") %>% 
+  mutate(fill_col = ifelse(sig == 1, as.character(dom_euc), NA)) %>% 
+  arrange(dom_euc, alpha) %>% 
+  mutate(site = factor(site, levels = unique(site)))
+
+
+ggplot(codom, aes(x = alpha, y = site)) + 
+    geom_vline(xintercept = 0, color = "red", linetype = "dashed") +
+  geom_errorbar(aes(xmin = lo, xmax = hi, colour = dom_euc), size = 1.5) + 
+  geom_point(aes(fill = fill_col, 
+                 colour = dom_euc), 
+             shape = 21,
+             size = 3) +
+  scale_colour_manual(values = c("#ED90A4", "#D3A263", "#99B657", "#33C192", "#00BDCE", "#94A9EC", "#DC91DB"), 
+                      name = "Dominant Eucalyptus") + 
+  scale_fill_manual(values = c("#ED90A4", "#99B657", "#33C192", "#00BDCE",  "#DC91DB"), 
+                    na.value = "white", 
+                    guide = "none")+
+  labs(x = "Alpha Coefficient (+/-95% CI)",
+       y = "") + 
+  scale_y_discrete(limits = rev) + #more making order right
+  ggtitle("Co/dominant_Co/dominant") +
+  theme_bw() + 
+  guides(colour = guide_legend(override.aes = 
+                                 list(fill = colours, 
+                                      size = 2) ) ) 
+```
+
+Check what's happening between eucs and non-eucs
+
+```{r}
+non_euc <- final_ccmod %>% 
+  mutate(species_int = paste0(species_from, sep = "_", species_to)) %>% 
+  mutate(species_int = ifelse(species_int == "Eucalyptus_Non-euc", "Non-euc_Eucalyptus", species_int)) %>% 
+  mutate(class_int = paste0(class_from, sep = "_", class_to)) %>% 
+  mutate(sig = ifelse((lo > 0 | hi < 0), 1, NA )) %>% 
+  filter(species_int == "Non-euc_Eucalyptus")
+```
+
+```{r}
+colours <- hcl.colors(7, "Viridis")
+
+ggplot() +
+geom_vline(xintercept = 0, colour = "red", linewidth = .5) +
+  geom_beeswarm(data = non_euc, 
+                aes(x = alpha, 
+                    y = class_int, 
+                    fill = as.factor(sig), 
+                    colour = dom_euc, 
+                    text = paste("alpha:", alpha, "<br>", 
+                                 "class int:", class_int, "<br>", 
+                                 "dom euc:", dom_euc)), 
+                 shape = 21, 
+                 alpha = 0.8) +
+                  scale_color_manual(values = colours,
+                                     name = "Dom Euc") + 
+                  scale_fill_manual(values = colours,
+                    na.value = "white", 
+                    name = "Sig", 
+                    labels = c("1", "0")) + 
+  theme_bw() + 
+   guides(colour = guide_legend(override.aes = 
+                                 list(fill = colours, 
+                                      size = 2) ) ) + 
+  ylab("") 
+
+```
+
+#### Prediction
+
+Looking at prediction for some sites
+
+```{r}
+ppjsdm::plot_papangelou(fit_collins, 
+                        window = window,
+                type =  "Eucalyptus Suppressed", 
+                use_log = TRUE, 
+                legend_title = "Conditional Intensity",
+                base_size = 16,
+                drop_type_from_configuration = TRUE, 
+                show =  "Eucalyptus Co/dominant")
+
+
+```
+
+### Model Performance
+
+We need a systematic view of model performance across sites and crown classes. Therefore, we use conditional AUC to get the AUC score for each site for each group.
+
+The function for conditional_auc:
+
+Function for AUC for each site and group:
+
+```{r}
+#make empty df 
+auc_df <- data.frame(matrix(ncol = 4))
+colnames(auc_df) <- c("site", "types", "auc_score", "n_points")
+
+auc_working <- auc_df
+```
+
+```{r}
+auc_site <- function(site, 
+                     threshold_noneuc = 12, #threshold to exclude non-euc groups
+                     threshold_euc = 7, #threshold to exclude euc groups
+                     short_range = 8){ #short range value 
+  
+d <- data_cleaned %>% filter(Site_Name == site)
+
+d <- d %>% 
+  mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
+  mutate(new_cc = paste(species, Crown_Class))%>% 
+  mutate(new_cc = if_else(new_cc == "Eucalyptus Emergent", "Eucalyptus Dominant", new_cc)) %>% 
+  mutate(new_cc = if_else(new_cc %in% c("Eucalyptus Co-dominant", "Eucalyptus Dominant"), "Eucalyptus Co/dominant", new_cc)) %>% 
+  mutate(new_cc = if_else(new_cc %in% c("Non-euc Co-dominant", "Non-euc Dominant"), "Non-euc Co/dominant", new_cc))
+
+d <- d %>%  #thresholds for groups 
+  group_by(new_cc) %>% 
+  mutate(observation_count = n()) %>% 
+  filter(!(str_starts(new_cc, "Non-euc") & observation_count < threshold_noneuc)) %>% 
+  filter(!(str_starts(new_cc, "Eucalyptus") & observation_count < threshold_euc)) 
+
+
+counts <- d %>% count(new_cc)
+#print(counts) # print counts to see 
+
+d <- d %>%
+  group_by(Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
+  mutate(
+    is_duplicated = n() > 1, #create column of TRUE/FALSE 
+    #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
+    x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
+    y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
+  ) %>%
+  ungroup() 
+
+
+configuration<- Configuration(d$x_jitter, d$y_jitter, types = d$new_cc) #make config 
+
+# Set parameters
+window <- ppjsdm::Rectangle_window(c(0, 100), c(0,100))
+nspecies <- length(levels(configuration$types))
+short_range <- matrix(short_range, nspecies, nspecies)
+model <- "exponential"
+
+fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
+                           window = window,
+                           short_range = short_range, 
+                           model = "exponential", 
+                           saturation = 10, 
+                           nthreads = 4, 
+                           fitting_package = "glmnet",
+                           dummy_distribution = "stratified",
+                           min_dummy = 1, dummy_factor = 1e10, 
+                           max_dummy = 1e3)
+
+model_types <- levels(configuration$types)
+
+for(k in model_types){
+
+  auc_working[k, "site"] <- site
+  auc_working[k, "types"] <- k
+   
+p <- plot_papangelou(fit, #to find the AUC of the train data
+                     window = window, 
+                     drop_type_from_configuration = TRUE, 
+                     type = k, 
+                     use_log = FALSE, 
+                     show = k, 
+                     return_papangelou = TRUE)
+
+  p$v[is.na(p$v)] <- mean(p)
+  p$v[p$v == -Inf] <- -1e10
+
+      
+      X <- subset(as.ppp(configuration, W = window), marks == k)
+      if(X$n <= 0){
+        auc_working[k,"auc_score"] <- NA
+      } else {
+        auc_working[k, "auc_score"] <- auc(X = X, covariate = as.function(p))
+      }
+      
+  auc_working[k, "n_points"] <- X$n
+}
+
+  return(auc_working)
+
+}
+
+```
+
+```{r}
+#test function
+df <- auc_site(site = "BirdTree")
+
+```
+
+```{r}
+#the sites 
+sites <- unique(data_cleaned$Site_Name)
+sites <- sites[!sites %in% c("Dip", "Bird", "Flowerdale")]
+```
+
+```{r}
+for(i in sites){ 
+  
+  auc_working <- auc_site(site = i, 
+                          threshold_noneuc = 8, 
+                          threshold_euc = 8, 
+                          short_range = 8)
+  
+auc_df <- rbind(auc_df, auc_working) #bind into larger df 
+  
+  }
+
+```
+
+Have a df, now to clean:
+
+```{r}
+auc_df_final <- data.frame(auc_df, row.names = NULL)
+auc_df_final <- auc_df_final %>% 
+  filter(!is.na(site))
+
+auc_df_final %>% count(site)
+```
+
+Visualisation of spread of AUC scores
+
+```{r}
+#only care about euc scores so 
+auc_df_final <- auc_df_final %>% 
+  filter(str_starts(types, "E"))
+
+auc_df_final %>% count(types)
+         
+```
+
+```{r}
+cc <- ggplot(data = auc_df_final, 
+       aes(x = types, 
+           y = auc_score)) + 
+  geom_boxplot() + 
+  geom_point(aes(colour = dom_euc)) + 
+  ylim(0.4, 0.9) + 
+  ggtitle("CC")
+```

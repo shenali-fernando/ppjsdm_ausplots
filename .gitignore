@@ -50,3 +50,6 @@ rsconnect/
 
 
 
+data/forest_productivity_2015.csv
+output/obliqua_diameter.png
+output/supersite_fullvsubset_ints.png

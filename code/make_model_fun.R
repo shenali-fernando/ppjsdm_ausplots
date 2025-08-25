@@ -47,10 +47,10 @@ find_ind <- function(site,
 }
 
 #Test
-weld <- find_ind(site = 'Weld', 
-                 group_cd = FALSE, 
-                 threshold_noneuc = 12, 
-                 threshold_euc = 5)
+# weld <- find_ind(site = 'Weld', 
+#                  group_cd = FALSE, 
+#                  threshold_noneuc = 12, 
+#                  threshold_euc = 5)
 
 
 
@@ -230,3 +230,90 @@ full_df_com <- full_df_com %>%
 
 a <- full_df_com %>% filter(species_from == "Non-euc") %>% 
   filter(species_to == "Non-euc")
+
+
+
+
+
+
+
+
+
+#Make by species 
+
+site_spmodel <- function(site, 
+                         group_cd = TRUE, #should we group c and d together
+                         threshold_noneuc = 12, #threshold to exclude non-euc groups
+                         threshold_euc = 7, #threshold to exclude euc groups
+                         short_range = 8){ #short range value 
+  
+  d <- data_cleaned %>% filter(Site_Name == site)
+  
+  
+  if(group_cd == TRUE){ #group all eucs together, group C and D together 
+    d <- d %>% 
+      mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
+      mutate(new_cc = paste(Genus_Species, Crown_Class))%>% 
+      mutate(new_cc = if_else(new_cc %in% c("Eucalyptus Co-dominant", "Eucalyptus Dominant", "Eucalyptus Emergent"), "Eucalyptus Co/dominant", new_cc)) %>% 
+      mutate(new_cc = if_else(new_cc %in% c("Non-euc Co-dominant", "Non-euc Dominant"), "Non-euc Co/dominant", new_cc)) %>% 
+      mutate(group = paste(Genus_Species, str_extract(new_cc, "\\S+$")))} 
+  else{
+    d <- d %>% 
+      group = paste(Genus_Species, new_cc)
+  }
+  
+  
+  d <- d %>%  #thresholds for groups 
+    group_by(group) %>% 
+    mutate(observation_count = n()) %>% 
+    filter(!observation_count < threshold_euc) 
+  
+  
+  counts <- d %>% count(group)
+  print(counts) # print counts to see 
+  
+  d <- d %>%
+    group_by(Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
+    mutate(
+      is_duplicated = n() > 1, #create column of TRUE/FALSE 
+      #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
+      x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
+      y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
+    ) %>%
+    ungroup() 
+  
+  
+  configuration<- Configuration(d$x_jitter, d$y_jitter, types = d$new_cc) #make config 
+  
+  # Set parameters
+  window <- ppjsdm::Rectangle_window(c(0, 100), c(0,100))
+  nspecies <- length(levels(configuration$types))
+  short_range <- matrix(short_range, nspecies, nspecies)
+  model <- "exponential"
+  
+  fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
+                       window = window,
+                       short_range = short_range, 
+                       model = "exponential", 
+                       saturation = 10, 
+                       nthreads = 4, 
+                       fitting_package = "glmnet",
+                       dummy_distribution = "stratified",
+                       min_dummy = 1, dummy_factor = 1e10, 
+                       max_dummy = 1e3)
+  
+  sum <- summary(fit)
+  
+  
+  box <- ppjsdm::box_plot(fit = fit,
+                          summ = sum,
+                          coefficient = "alpha",
+                          which = "all", 
+                          text_size = 10)
+  print(box)
+  return(list(fit = fit, sum = sum)) #return both fit and sum to extract 
+  
+}
+
+#test 
+site_spmodel(site = "Weld")

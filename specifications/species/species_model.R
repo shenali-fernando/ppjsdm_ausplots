@@ -123,5 +123,13 @@ eucs_sp %>% count(to)
 within_eucs_sp <- eucs_sp %>% 
   filter(from == to)
 
-ggplot(data = eucs_sp )
+ggplot(data = eucs_sp, 
+       aes(x = from, 
+           y = alpha, 
+           colour = site)) + 
+  geom_point() + 
+  geom_hline(yintercept = 0, linetype = "dashed") + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+#well, that's a lot to look at 
 
+#

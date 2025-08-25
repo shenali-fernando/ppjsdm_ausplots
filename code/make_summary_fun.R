@@ -299,18 +299,18 @@ make_sum_df <- function(fits, #Must be a list of fits
 }
 
 
-
 # 
-# ## Test function
-df1 <- make_sum_df(fits = list("ANU101" = fit_anu101_2, "ANU363" = fit_anu363),
-            summ = list(sum_anu101_2, sum_anu363),
-            coefficient = "alpha")
-
-
-fits <- anu101$fit
-sum <- anu101$sum
-
-df2 <- make_sum_df(fits = list(fits), 
-                   summ = list(sum))
-
-
+# # 
+# # ## Test function
+# df1 <- make_sum_df(fits = list("ANU101" = fit_anu101_2, "ANU363" = fit_anu363),
+#             summ = list(sum_anu101_2, sum_anu363),
+#             coefficient = "alpha")
+# 
+# 
+# fits <- anu101$fit
+# sum <- anu101$sum
+# 
+# df2 <- make_sum_df(fits = list(fits), 
+#                    summ = list(sum))
+# 
+# 

@@ -100,6 +100,15 @@ write.csv(data_cleaned, "C:/Users/shena/Desktop/ausplots/ppjsdm_ausplots/data/da
 
 
 
+### Mapping 
+library(ozmaps)
+library(ggplot2)
+ggplot() +
+  geom_sf(data = ozmap_data("country"), fill = "gray90", color = "white") +
+  geom_point(data = data_cleaned, aes(x = Longitude, y = Latitude, colour = Site_Name),size = 3) + 
+  xlim(144, 150) + 
+  ylim(-45, -40)
+
 #Check the species by crown class divisions of some plots
 supersite2 <- supersite %>% group_by(Genus_Species, Crown_Class) %>% 
   count()

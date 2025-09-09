@@ -314,3 +314,23 @@ make_sum_df <- function(fits, #Must be a list of fits
 #                    summ = list(sum))
 # 
 # 
+
+
+
+
+jitter_points <- function(df){
+  df <- df %>%
+    group_by(Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
+    mutate(
+      is_duplicated = n() > 1, #create column of TRUE/FALSE 
+      #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
+      x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
+      y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
+    ) %>%
+    ungroup()
+  
+  df <- df %>% 
+    dplyr::select(-(is_duplicated))
+}
+
+

@@ -19,14 +19,14 @@ find_ind <- function(site,
     
     if(group_cd == TRUE){ #group all eucs together, group C and D together 
       d <- d %>% 
-        mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
+        mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia|^Syncarpia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
         mutate(new_cc = paste(species, Crown_Class))%>% 
         mutate(new_cc = if_else(new_cc == "Eucalyptus Emergent", "Eucalyptus Dominant", new_cc)) %>% 
         mutate(new_cc = if_else(new_cc %in% c("Eucalyptus Co-dominant", "Eucalyptus Dominant"), "Eucalyptus Co/dominant", new_cc)) %>% 
         mutate(new_cc = if_else(new_cc %in% c("Non-euc Co-dominant", "Non-euc Dominant"), "Non-euc Co/dominant", new_cc))} 
     else{
       d <- d %>% 
-        mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
+        mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia|^Syncarpia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
         mutate(new_cc = paste(species, Crown_Class)) %>% 
         mutate(new_cc = if_else(new_cc == "Eucalyptus Emergent", "Eucalyptus Dominant", new_cc)) 
     }
@@ -44,6 +44,32 @@ find_ind <- function(site,
     counts <- d %>% count(new_cc)
     return(counts) # print c
     
+}
+
+
+
+spcc_ind <- function(site, 
+                     threshold_noneuc = 10, 
+                     threshold_euc = 10){
+  
+  d <- data_cleaned %>% filter(Site_Name == site)
+  
+  d <- d %>% 
+    mutate(species = if_else(!str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia|^Syncarpia")), "Non-euc", Genus_Species)) %>% 
+    mutate(Crown_Class = if_else(Crown_Class %in% c("Dominant", "Emergent", "Co-dominant"), "Co/dominant", Crown_Class)) %>% 
+    mutate(new_spcc = paste(species, Crown_Class))  
+  
+  
+  d <- d %>%  #thresholds for groups 
+    group_by(new_spcc) %>% 
+    mutate(observation_count = n()) %>% 
+    ungroup() %>% 
+    filter(!(str_starts(new_spcc, "Non-euc") & observation_count < threshold_noneuc)) %>% 
+    filter(!(str_starts(new_spcc,  regex("^Eucalyptus|^Corymbia|^Syncarpia")) & observation_count < threshold_euc))
+  
+  counts <- d %>% count(new_spcc)
+  return(counts) # print c
+  
 }
 
 #Test
@@ -89,14 +115,14 @@ d <- data_cleaned %>% filter(Site_Name == site)
 
 if(group_cd == TRUE){ #group all eucs together, group C and D together 
 d <- d %>% 
-  mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
+  mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia|^Syncarpia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
   mutate(new_cc = paste(species, Crown_Class))%>% 
   mutate(new_cc = if_else(new_cc == "Eucalyptus Emergent", "Eucalyptus Dominant", new_cc)) %>% 
   mutate(new_cc = if_else(new_cc %in% c("Eucalyptus Co-dominant", "Eucalyptus Dominant"), "Eucalyptus Co/dominant", new_cc)) %>% 
   mutate(new_cc = if_else(new_cc %in% c("Non-euc Co-dominant", "Non-euc Dominant"), "Non-euc Co/dominant", new_cc))} 
 else{
   d <- d %>% 
-    mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
+    mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia|^Syncarpia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
     mutate(new_cc = paste(species, Crown_Class)) %>% 
     mutate(new_cc = if_else(new_cc == "Eucalyptus Emergent", "Eucalyptus Dominant", new_cc))
 }
@@ -252,7 +278,7 @@ site_spmodel <- function(site,
   
   if(group_cd == TRUE){ #group all eucs together, group C and D together 
     d <- d %>% 
-      mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
+      mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia||^Syncarpia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
       mutate(new_cc = paste(Genus_Species, Crown_Class))%>% 
       mutate(new_cc = if_else(new_cc %in% c("Eucalyptus Co-dominant", "Eucalyptus Dominant", "Eucalyptus Emergent"), "Eucalyptus Co/dominant", new_cc)) %>% 
       mutate(new_cc = if_else(new_cc %in% c("Non-euc Co-dominant", "Non-euc Dominant"), "Non-euc Co/dominant", new_cc)) %>% 

@@ -419,3 +419,4 @@ auc_inds_sum <- d %>%
     min_a = min(value), 
     max_a = max(value)
   )
+

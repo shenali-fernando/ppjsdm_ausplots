@@ -60,4 +60,7 @@ data/NDVI_Mean
 data/PET
 output/intra_sites.png
 output/intra_sites2.png
-output/summary_traits
+output/summary_traits.csv
+specifications/diameter/output/auc_inds_size_site_old
+specifications/diameter/output/auc_inds_size_species_old
+specifications/diameter/output/auc_inds_size_old

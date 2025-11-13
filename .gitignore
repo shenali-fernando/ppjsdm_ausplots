@@ -63,5 +63,5 @@ output/intra_sites2.png
 output/summary_traits.csv
 specifications/diameter/output/auc_inds_size_site_old.csv
 specifications/diameter/output/auc_inds_size_species_old.csv
-specifications/diameter/output/auc_inds_size_old.csv
+specifications/diameter/output/auc_site_size_old.csv
 specifications/diameter/output/size_within2_small_lims.png

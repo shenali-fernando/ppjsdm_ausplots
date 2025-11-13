@@ -393,11 +393,17 @@ ggplot(aes(x = alpha,
   
 
 se_aus <-  within %>% 
-  filter(region %in% c("TAS", "SE_AUS")) %>% 
+  filter(region %in% c("TAS", "SE_AUS")) %>%  
   group_by(species_from, class_int) %>% 
   mutate(obs = n()) %>% 
   ungroup() %>% 
   filter(obs > 2) %>% 
+  filter(!species_to == "Pittosporum bicolor") %>%
+  mutate(class_int = case_when(
+    class_int == "large_large" ~ "Large ↔ Large",
+    class_int == "small_large" ~ "Small ↔ Large",
+    class_int == "small_small" ~ "Small ↔ Small"
+    )) %>% 
   ggplot(aes(x = alpha, 
              y = species_from, 
              colour = georegion, 
@@ -407,12 +413,17 @@ se_aus <-  within %>%
   scale_color_manual(values = c("#ED90A4", "#D3A263", "#99B657",  "#00BDCE", "#94A9EC"), 
                      guide = "none") + 
   scale_fill_manual(values = c("#ED90A4", "#D3A263", "#99B657",  "#00BDCE", "#94A9EC"), 
-                    na.value = "white") +
+                    na.value = "white", 
+                    name = "Region") +
   facet_wrap(~class_int) +
   geom_vline(xintercept = 0, colour = "red") + 
   theme_bw()  + 
   ylab("SE AUS")
+se_aus
 
+ggsave("basemap.png", basemap, 
+       width = 12, height = 8, 
+       dpi = 300)
 
 
 

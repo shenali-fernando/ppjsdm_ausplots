@@ -60,3 +60,4 @@ data/NDVI_Mean
 data/PET
 output/intra_sites.png
 output/intra_sites2.png
+output/summary_traits

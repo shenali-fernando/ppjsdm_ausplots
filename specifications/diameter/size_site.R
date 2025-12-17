@@ -12,7 +12,8 @@ library(forcats)
 
 ###### ALL SPECIES - MODELLING INTERACTIONS BETWEEN SPECIES_SIZE GROUPS 
 # Have some pretty good functions to help us here 
-source("size_funs.R")
+source("specifications/diameter/size_funs.R")
+source("code/make_summary_fun.R")
 
 # It is important to have well-parameterised models... 
 # From previous work on the dataset, I know the ballpark of where the parameters should be 
@@ -55,12 +56,12 @@ birdtree <-  size_sites(site = "BirdTree", #single site
                        group_type = "species_size",
                        show_size_freq = FALSE,
                        config_only = FALSE, #if TRUE, returns config only and exits function
-                       threshold = 14, 
+                       threshold = 15, 
                        short_range = 10, 
                        short_model = "exponential")
 
-birdtree_df <- make_sum_df(fits = list(fit), 
-            summ = list(sum))
+birdtree_df <- make_sum_df(fits = list(birdtree$fit), 
+            summ = list(birdtree$sum))
 
 birdtree_df <- birdtree_df %>% 
   mutate(range_ci = hi - lo) %>% 
@@ -74,13 +75,13 @@ birdtree_df %>%
 bird <-  size_sites(site = "Bird", #single site 
                         group_type = "species_size",
                         show_size_freq = FALSE,
-                        config_only = TRUE, #if TRUE, returns config only and exits function
+                        config_only = FALSE, #if TRUE, returns config only and exits function
                         threshold = 13, 
                         short_range = 10, 
                         short_model = "exponential")
 
-bird_df <- make_sum_df(fits = list(fit), 
-                           summ = list(sum))
+bird_df <- make_sum_df(fits = list(bird$fit), 
+                           summ = list(bird$sum))
 bird_df <- bird_df %>% 
   mutate(range_ci = hi - lo) %>% 
   mutate(site = "Bird")
@@ -185,8 +186,8 @@ north <- size_sites(site = "NorthStyx", #single site
                   threshold = 16, 
                   short_range = 10, 
                   short_model = "exponential")
-north_df <- make_sum_df(fits = list(fit), 
-                      summ = list(sum))
+north_df <- make_sum_df(fits = list(north$fit), 
+                      summ = list(north$sum))
 north_df <- north_df %>% 
   mutate(range_ci = hi - lo) %>% 
   mutate(site = "NorthStyx")
@@ -270,6 +271,8 @@ full_df2 <- full_df %>%
 ## Okay, now can subset the df and visualise different things 
 #We want to get an understanding of the range of interactions going on 
 
+df_all_3_5 %>% count(site)
+
 full_df2 <- full_df2 %>% mutate(class_int = paste(class_from, sep = "_", class_to))
 
 full_df2 <- full_df2 %>% 
@@ -283,8 +286,7 @@ full_df2 <- full_df2 %>%
                                site %in% c("BenRidge", "Caveside", "Mackenzie", "MtField", "MtMaurice", "NorthStyx") ~ "d_TAS", 
                                site %in% c("BondTier", "BlackRiver", "Weld", "MtField", "ZigZag", "Supersite", "Bird", "Flowerdale", "Dip") ~ "o_TAS")) 
 
-
-
+ 
 
 full_df2 <- full_df2 %>% 
   mutate(region = case_when(georegion %in% c("S_VIC", "N_VIC", "S_NSW") ~ "SE_AUS", 
@@ -295,7 +297,7 @@ full_df2 <- full_df2 %>%
 )
 
 #save
-write.csv(full_df2, "size_site_df_add3.5.csv")
+write.csv(df_all, "size_site_df_add3.5.csv")
 
 within %>% group_by(class_int) %>% summarise(median = median(alpha), 
                                              mean = mean(alpha), 
@@ -315,6 +317,7 @@ within <- df %>%
 
 within <- within %>% 
   mutate(fill_col = ifelse(sig == 1, as.character(georegion), NA))
+
 
 
 
@@ -770,7 +773,14 @@ austraits <- load_austraits(version = "6.0.0", path = "data/austraits")
 species <- unique(full_df2$species_from)
 
 
-#new_names <- create_taxonomic_update_lookup(species) #check names are current 
+new_names <- create_taxonomic_update_lookup( c("Acacia melanoxylon", "Allocasuarina torulosa", 
+                                                                                    "Corymbia intermedia", "Eucalyptus grandis", 
+                                                                                    "Eucalyptus pilularis", "Eucalyptus microcorys", 
+                                                                                    "Archontophoenix cunninghamiana", "Caldcluvia paniculosa",
+                                                                                    "Ceratopetalum apetalum", "Cryptocarya glaucescens",
+                                                                                    "Cryptocarya rigida", "Polyscias elegans",
+                                                                                    "Schizomeria ovata", "Sloanea langii", "Syncarpia glomulifera",
+                                                                                    "Synoum glandulosum"))
 
 #check traits for the taxa and traits we are interested in 
 
@@ -786,7 +796,7 @@ summary_traits1 <- df_traits %>%
   group_by(taxon_name, trait_name) %>% 
   summarise(minimum = min(as.numeric(value), na.rm = TRUE), 
             median = median(as.numeric(value), na.rm = TRUE), 
-            mean = mean(as.numeric(value), na.rm = TRUE), 
+            mean = mean(as.numeric(value), na.rm = TRUE),
             maximum = max(as.numeric(value), na.rm = TRUE)) %>% 
   ungroup()
 

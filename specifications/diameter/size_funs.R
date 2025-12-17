@@ -7,7 +7,6 @@ library(ggpubr)
 #Load Data
 data <- read.csv("data/data_cleaned.csv")
 
-
 #What to be done: 
 # for each species in a site, we need to spilt each species so that there are roughly even numbers of 'small' and 'large' individuals 
 #for all individuals, not just eucs 
@@ -29,7 +28,7 @@ size_sites <- function(site, #single site
                        threshold = 10, 
                        short_range = 10, 
                        short_model = "exponential"){ #threshold to exclude a group 
-  
+
   df <- data %>%
     filter(Site_Name == site)
   
@@ -67,8 +66,7 @@ size_sites <- function(site, #single site
       group_by(new_group) %>% 
       mutate(observation_count = n()) %>% 
       ungroup() %>% 
-      filter(!(observation_count < threshold)) %>% 
-      filter(! new_group %in% c("Eucalyptus urnigera small"))
+      filter(!(observation_count < threshold))
   } 
   else
   {return("Error: group_type not recognised; check specification")}
@@ -97,7 +95,7 @@ size_sites <- function(site, #single site
   
   nspecies <- length(levels(configuration$types))
   
-  
+set.seed(1030)  
   #fit model 
   fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
                        window = window,
@@ -105,6 +103,7 @@ size_sites <- function(site, #single site
                        model = "exponential",
                        saturation = 10, 
                        nthreads = 4, 
+                       use_regularization = FALSE, 
                        fitting_package = "glmnet",
                        dummy_distribution = "stratified",
                        min_dummy = 1, dummy_factor = 1e10, 
@@ -113,7 +112,7 @@ size_sites <- function(site, #single site
   
   sum <- summary(fit)
   sum
-  return(list(fit = fit, sum = sum))
+  return(list(fit = fit, sum = sum, config = configuration))
 }
 
 

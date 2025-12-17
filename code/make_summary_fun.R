@@ -110,7 +110,7 @@ convert_names <- function(x,
 
 
 
-#just adding defaults and get rid of how argument because confusing
+#just adding defaults and get rid of how argument because confusing, also include se in df
 make_sum_df <- function(fits, #Must be a list of fits
                         coefficient = "alpha",
                         summ, # Must be a list of sums 
@@ -217,6 +217,11 @@ make_sum_df <- function(fits, #Must be a list of fits
         d$hi_numerical <- sapply(seq_len(nrow(d)), function(i) { # Upper-endpoint of the numerical CI (relating to the numerical error due to dummy points)
           tryCatch(access(summ[[k]]$hi_numerical)[[n]][d$from[i], d$to[i]], error = function(err) NA)
         })
+        
+        d$se <- sapply(seq_len(nrow(d)), function(i) { # Standard error
+          tryCatch(access(summ[[k]]$se)[[n]][d$from[i], d$to[i]], error = function(err) NA)
+        })
+        
       }
       
       # Convert names to full names
@@ -315,22 +320,22 @@ make_sum_df <- function(fits, #Must be a list of fits
 # 
 # 
 
-
-
-
-jitter_points <- function(df){
-  df <- df %>%
-    group_by(Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
-    mutate(
-      is_duplicated = n() > 1, #create column of TRUE/FALSE 
-      #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
-      x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
-      y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
-    ) %>%
-    ungroup()
-  
-  df <- df %>% 
-    dplyr::select(-(is_duplicated))
-}
-
-
+# 
+# 
+# 
+# jitter_points <- function(df){
+#   df <- df %>%
+#     group_by(Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
+#     mutate(
+#       is_duplicated = n() > 1, #create column of TRUE/FALSE 
+#       #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
+#       x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
+#       y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
+#     ) %>%
+#     ungroup()
+#   
+#   df <- df %>% 
+#     dplyr::select(-(is_duplicated))
+# }
+# 
+# 

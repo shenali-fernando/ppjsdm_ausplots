@@ -52,7 +52,7 @@ for(type_i in all_types){ #open first loop
                              nthreads = 3)
   
   
-  #compute the summary stats we want to output in the final df - put into tmp
+#compute the summary stats we want to output in the final df - put into tmp
 tmp <- data.frame(
     from = type_j, 
     to = type_i, 

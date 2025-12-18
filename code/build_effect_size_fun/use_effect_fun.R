@@ -1,5 +1,15 @@
+library(ppjsdm)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+##Source the functions 
+source("specifications/diameter/size_funs.R")
+source("code/make_summary_fun.R")
+source("code/build_effect_size_fun/effect_function.R")
 
 #We need to supply fit and configuration for effect function to work
+data <- read.csv("data/data_cleaned.csv")
 sites <- unique(data$Site_Name)
 sites_d <- sites[!sites %in% c('WaratahMix', 'Bird', 'Lardner', 'Caveside', 'Flowerdale', 'MtField')]
 
@@ -17,19 +27,21 @@ for(m in sites_d){
                   threshold = 16, 
                   short_range = 10, 
                   short_model = "exponential")
-  fit <- c$fit
+  fit <- waratah$fit
   sum <- c$sum
-  configuration <- c$config
+  configuration <- waratah$config
   show(plot(configuration))
   
-  e <- effect_size2(configuration, fit)
+  e <- effect_size2(configuration, fit) #CHECK WHAT EFFECT_SIZE FUN YOU WANT
   
   e <- e %>% 
-    mutate(site = m)
+    mutate(site = "WaratahMix")
   
   
   eff_final <- rbind(eff_final, e)
 }
+
+
 
 
 ggplot(data = eff_final, 
@@ -39,6 +51,8 @@ ggplot(data = eff_final,
 
 
 write.csv(effects, "effects_final_fixed.csv")
+
+eff_final <- effects_computeonloc
 
 ##Add some cols for visualisation 
 eff_final2 <- eff_final %>%
@@ -86,16 +100,29 @@ d <- df_add3_5_t15 %>%
   select(int, site, se, sig, lo, hi, range_ci)
 
 eff_final2 <- eff_final2 %>% mutate(int = paste0(from, sep = "_", to))
+eff_final30 <- left_join(eff_final20, d, by = c("int", "site"))
 
-eff_final20 <- left_join(eff_final2, d, by = c("int", "site"))
+full_eff <- eff_final30 %>% 
+  rowwise() %>% 
+  mutate(se = mean(c_across(c(20, 25)), na.rm = TRUE), 
+         sig = mean(c_across(c(21, 26)), na.rm = TRUE),
+         lo = mean(c_across(c(22, 27)), na.rm = TRUE), 
+         hi = mean(c_across(c(23, 28)), na.rm = TRUE), 
+         range_ci = mean(c_across(c(24, 29)), na.rm = TRUE)
+  ) %>% 
+  ungroup()
+
+#get rid of extra cols 
+full_eff <- full_eff %>% 
+    dplyr::select(-(20:29))
 
 
 
-write.csv(eff_final20, "actual_effects_for_real.csv")
+write.csv(full_eff, "full_final_effectsize.csv")
 
 
-within <- eff_final20 %>% filter(group %in% c("within_species_small_small", "within_species_large_large"))
-bw <- eff_final20 %>% filter(!group %in% c("within_species_small_small", "within_species_large_large"))
+within <- full_eff %>% filter(group %in% c("within_species_small_small", "within_species_large_large"))
+bw <- full_eff %>% filter(!group %in% c("within_species_small_small", "within_species_large_large"))
 
 
 w <- ggplot(data = within, 
@@ -106,39 +133,40 @@ w <- ggplot(data = within,
   geom_vline(xintercept = 0, linetype = "dashed", colour = "gray60") + 
   geom_hline(yintercept = 0, linetype = "dashed", colour = "gray60") +
   geom_point(shape = 21, size = 3.5, alpha = .5) + 
-  scale_fill_manual(values = c("#00BDCE"), 
-                    na.value = "white", 
-                    name = "Significance") +
+  scale_fill_manual(values = c("#00BDCE", "white"),
+                    labels = c("Y", "N"),
+                    name = "Significant") +
+  scale_x_continuous(breaks = seq(-3.3, 0.75, by = 0.5)) +
  # xlim(c(-.2, .2)) +
   #ylim(c(-1.25, 1.25)) +
   theme_bw() + 
   ylab("Log effect size") + 
   xlab("Alpha coefficient") + 
-  ggtitle("Within Species")
+  ggtitle("Within species size")
 
-ggsave("b.png", b, height = 8, width = 8, dpi = 300)
+w
 
-bw <- bw %>% mutate(sig = ifelse(sig == 1, 1, 0))
 
-bw2 <- bw %>% arrange(sig)
+ggsave("between_effects.png", b, dpi = 300)
 
-b <- ggplot(data = bw2, 
+
+b <- ggplot(data = bw, 
        aes(x = alpha, 
            y = log(mean_effect), 
            fill = factor(sig))) +
   facet_wrap(~group, scales = "free") +
-  geom_point(shape = 21, size = 2, alpha = .7, colour = "gray60") +
+  geom_point(shape = 21, size = 3, alpha = .7, colour = "gray60") +
   geom_vline(xintercept = 0, linetype = "dashed", colour = "gray60") + 
   geom_hline(yintercept = 0, linetype = "dashed", colour = "gray60") +
-  scale_fill_manual(values = c("#00BDCE"), 
-                    na.value = "white", 
-                    name = "Significance") +
+  scale_fill_manual(values = c("#00BDCE", "white"), 
+                    labels = c("Y", "N"),
+                    name = "Significant") +
   # xlim(c(-.2, .2)) +
   #ylim(c(-1.25, 1.25)) +
   theme_bw() + 
   ylab("Log effect size") + 
   xlab("Alpha coefficient") + 
-  ggtitle("Between")
+  ggtitle("Between species size")
 b
 
 
@@ -156,5 +184,12 @@ b
 #type 1 error and type 2 
 #a more conservative approach is a alpha of 0.1 is not important effect 
 # a more liberal approach is an alpha of 0.05 is not important 
+
+
+
+
+
+               
+  
 
 

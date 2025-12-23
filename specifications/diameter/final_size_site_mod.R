@@ -155,7 +155,7 @@ flower_df <- bird_df %>% mutate(site = "Flowerdale")
 
 ##Lardner
 df <- data %>%
-  filter(Site_Name == "ZigZag")
+  filter(Site_Name == "Lardner")
 
 
 df <- df %>%

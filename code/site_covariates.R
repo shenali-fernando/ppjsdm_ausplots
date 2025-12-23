@@ -10,11 +10,40 @@ library(car)
 covars <- read.csv("C:/Users/shena/Desktop/ausplots/ppjsdm_ausplots/data/site_covariates.csv")
 
 #need to rename some cols 
-covars <- covars %>% 
-  rename(MAT = MAT..C.) %>% 
-  rename(MAP = MAP..mm.) %>% 
-  rename(elev = elevation..m.) %>% 
-  rename(FPI = FPI..3PG.)
+# covars <- covars %>% 
+#   rename(MAT = MAT..C.) %>% 
+#   rename(MAP = MAP..mm.) %>% 
+#   rename(elev = elevation..m.) %>% 
+#   rename(FPI = FPI..3PG.)
+
+
+#add regions 
+site_covariates <- site_covariates %>% 
+  mutate(georegion = case_when(Site_Name %in% c("Weeaproinah", "Turtons", "Lardner") ~ "S_VIC", 
+                               Site_Name %in% c("ANU101", "ANU363", "ANU589", "Ada Tree", "HardyCreek") ~ "N_VIC", 
+                               Site_Name %in% c("Dawson", "Frankland", "Clare", "Giants") ~ "S_WA",
+                               Site_Name %in% c("Carey", "Dombakup", "Warren",  "Sutton","Collins") ~ "N_WA", 
+                               Site_Name %in% c("Baldy", "Koombooloomba", "Lamb Range", "Herberton") ~ "QLD", 
+                               Site_Name %in% c("MinesRd", "A-Tree", "BirdTree", "BlackBull", "Lorne", "Tinebank", "Bruxner", "Osullivans") ~ "N_NSW", 
+                               Site_Name %in% c("Newline", "WaratahMix", "WogWay", "Goodenia", "Candelo") ~ "S_NSW", 
+                               Site_Name %in% c("BenRidge", "Caveside", "Mackenzie", "MtField", "MtMaurice", "NorthStyx") ~ "d_TAS", 
+                               Site_Name %in% c("BondTier", "BlackRiver", "Weld", "MtField", "ZigZag", "Supersite", "Bird", "Flowerdale", "Dip") ~ "o_TAS")) %>% 
+  mutate(region = case_when(georegion %in% c("S_VIC", "N_VIC", "S_NSW") ~ "SE_AUS", 
+                            georegion %in% c("S_WA", "N_WA") ~ "WA",
+                            georegion %in% c("QLD", "N_NSW") ~ "N_AUS",  
+                            georegion %in% c("o_TAS", "d_TAS") ~ "TAS"))
+
+
+
+a <- site_covariates %>% 
+  group_by(region) %>% 
+  summarise(mean_map = mean(MAP), 
+            max_map = max(MAP), 
+            min_map = min(MAP), 
+            mean_mat = mean(MAT), 
+            max_mat = max(MAT), 
+            min_mat = min(dMAT))
+
 
 #Need to understand the correlation between MAT, MAP, and productivity index (FPI) 
 #So, create a scatterplot matrix 
@@ -105,25 +134,63 @@ ggplot(data = site_covars,
   geom_point(size = 3) + 
   theme_bw()
 
-site_covars <- site_covars %>% 
-  mutate(region = site) %>% 
-  mutate(region = if_else(region %in% c("Carey", "Dombakup", "Warren", "Dawson", "Giants", "Sutton", "Frankland", "Clare", "Collins"), 
-                          "WA", region)) %>% 
-  mutate(region = if_else(region %in% c("ANU101", "ANU363", "ANU589", "Ada Tree", "HardyCreek", "Weeaproinah", "Turtons", "Lardner"), 
-                          "SE_VIC", region)) %>% 
-  mutate(region = if_else(region %in% c("Newline", "WaratahMix", "WogWay", "Goodenia", "Candelo"), 
-                          "SE_NSW", region)) %>% 
-  mutate(region = if_else(region %in% c("MinesRd", "A-Tree", "BirdTree", "BlackBull", "Lorne", "Tinebank", "Bruxner", "Osullivans"), 
-                          "N_NSW", region)) %>% 
-  mutate(region = if_else(region %in% c("Baldy", "Koombooloomba", "Lamb Range", "Herberton"), 
-                          "QLD", region)) %>% 
-  mutate(region = if_else(region %in% c("BenRidge", "Caveside", "Mackenzie", "MtField", "MtMaurice", "NorthStyx"), 
-                          "d_TAS", region)) %>% 
-  mutate(region = if_else(region %in% c("BondTier", "BlackRiver", "Weld", "Weld", "MtField", "ZigZag", "Supersite"), 
-                          "o_TAS", region)) 
+
+################################################################################
+##### Association between weighted site x group means and site covariates ######
+
+df <- df_add3_5_t15 #use this results 
+
+#add a which_species col
+df <- df %>% 
+  mutate(which_species = ifelse(species_from == species_to, "within", "between"))
+
+#check groups are not doubled up 
+df %>% group_by(which_species) %>% count(group)
+
+#compute a weighted mean for each which_species x group for each site 
+w_means <- df %>% 
+  group_by(which_species, group, site) %>% 
+  summarise(w.mean = weighted.mean(alpha, se), 
+            median = median(alpha)) %>% 
+  ungroup()
+
+##start with Within-species interactions 
+within_wmeans <- w_means %>% 
+  filter(which_species == "within")
+
+site_covariates <- site_covariates %>% 
+  rename(site = Site_Name)
+
+#merge everything 
+sum_within <- merge(x = within_wmeans, y = site_covariates, by = "site" , all.x = TRUE)
+
+#for plotting make some new columns 
+sum_within2 <- sum_within %>%
+  mutate(fg = str_extract(group, "^\\w+")) %>% 
+  mutate(class_to = str_extract(group, "\\w+$")) %>% 
+  mutate(class_from = str_extract(group, "(?<=\\.)\\w+(?=_)"))
+
+sum_within2 <- sum_within2 %>% 
+  mutate(class_int = paste0(class_from, sep = "_", class_to)) %>% 
+  mutate(class_int = ifelse(class_int == "small_large", "large_small", class_int))
 
 
-r <- rast("data/climateEngine_download.NDVI.tif")
-plot(r)
+
+#Visualisation of association between weighted mean within-species int and site covairates 
+ggplot(data = sum_within2, 
+       aes(y = w.mean, 
+           x = MAT,
+           colour = fg
+       )) + 
+  facet_grid(~class_int)+
+  geom_smooth(method = "glm") +
+  geom_point()+ 
+  theme_bw()
 
 
+
+#Correlations: 
+pairs(~w.mean + MAT + Latitude + MAP + GPP + yearlymaxNDVI + PET, data = sum_within2)
+
+
+#I think there isn't a convincing pattern...

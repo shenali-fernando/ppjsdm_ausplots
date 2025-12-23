@@ -3,7 +3,7 @@ library(ggforce)
 library(forcats)
 library(patchwork)
 library(OpenStreetMap)
-library(osmdata)
+library(ggmap)
 library(ozmaps)
 
 

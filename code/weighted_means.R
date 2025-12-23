@@ -5,7 +5,7 @@ library(ppjsdm)
 
 
 # Using this results df 
-df <- df_add3_5_t12
+df <- df_add3_5_t15
 
 ################ WEIGHTED MEANS 
 ### Compute a weighted mean for each size + function grouping for eahc site 
@@ -129,3 +129,20 @@ colnames(bw_wmean) <- c("group", "se", "sig", "ci_range")
 # For all data (between site)
 all_wmean <- cbind(all1, all2$w.mean, all3$w.mean)
 colnames(all_wmean) <- c("group", "site", "se", "sig", "ci_range")
+
+
+
+###Sig testing for w1
+w1 <- w1 %>% 
+  mutate(class_int = c("large_large", "large_small", "small_small", "large_large", "large_small", "small_small"))
+
+w1 <- w1 %>% 
+  mutate(fg = c("Canopy","Canopy", "Canopy" ,"Subcanopy", "Subcanopy", "Subcanopy"))
+
+model <- aov(w.mean ~ class_int * fg, data = w1)
+summary(model)
+
+plot(model)         # residuals vs fitted and QQ plot
+
+shapiro.test(residuals(model))   # normality
+

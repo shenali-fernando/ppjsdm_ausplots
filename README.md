@@ -1,4 +1,39 @@
-# ppjsdm_ausplots
-This repo contains the analysis on the TERN ausplots data using the saturated parwise interaction Gibbs point process (ppjsdm) model.
+# PPJSDM on AusPlots Dataset
 
-The file structure is so that code for functions and exploratory analysis are found in the 'code' folder. Code, vignettes, and outputs for different model specifications (i.e. changing how individuals are grouped) are gound in the 'specification' folder. Specifications of crown class include when individuals in a site are grouped into only crown class and when individuals are grouped into species by crown class. Species specifications are when individuals are grouped simply as their species. Diameter specifications are when individuals are grouped into diameter or size classes (small or large by thresholding the dbh measurements) and when grouped into a species by size class (eg. Eucalyptus obliqua large). 
+### Motivation and Aim
+
+This repo contains the analysis on the TERN AusPlots data using the saturated parwise interaction Gibbs point process (ppjsdm) model. The AusPlot dataset is a set of 48 1-ha plots in tall eucalypt forests that have been fully mapped for all trees larger than 10cm DBH. We have a number of expectations based on the large literature of spatial studies in tropical, subtropical, temperate deciduous and coniferous forests for the way forests should be spatially structured. Yet, there is little examination of forets in temperate broadleaf forests. The aim of this study was to understand the spatial structure of temperate broadleaf forests by way of modelling the interactions between trees in the AusPlots dataset using size, species and functional type (subcanopy or canopy) identity.
+
+### File Structure
+
+-   /data: Data inputs of the project, including various site level covariates
+
+    -   /ausplots: The TERN AusPlots data, including cleaned data and list of functional groups of species in the data
+
+    -   /metadata: PDFs giving metadata (data collection method, location, etc)
+
+-   /functions: Functions written for specific use in modelling the data
+
+-   /scripts:
+
+    -   /data_cleaning: Scripts to clean data and extract various covariate data
+
+    -   /model_specifications: As ppjsdm can have the individuals grouped in various ways (we refer to this as specifications), we looked at various model specifications to see if patterns in interaction varied, or if a simpler model was better than our expected best model that involved both species and size. Below the grouping of individuals for each model specification is described.
+
+        -   /null_model.R: All individuals in a site are the same species (i.e. species does not matter)
+
+        -   /species: Individuals in a site are grouped as their species
+
+        -   /diameter_site.R: Individuals in a site are grouped into small or large by diameter
+
+        -   /crown_class: Individuals in a site are grouped as their crown class
+
+        -   /species_diameter: Individuals in a site are grouped into species and size class of small or large (e.g. Acacia melanoxylon small)
+
+        -   /species_crown_class: Individuals in a site are grouped into species and crown class (e.g. Eucalyptus diversicolor intermediate)
+
+    -   /model_testing: Various tests of model fit and effect
+
+    -   /analysis: Scripts on the analysis of the interaction coefficients outputted by the model including computing weighted means for interacting groups, correlation of interactions to site covariates, etc
+
+-   /outputs: Outputs from model specifications, mostly from species_diameter specification

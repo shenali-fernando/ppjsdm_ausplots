@@ -25,7 +25,7 @@ This repo contains the analysis on the TERN AusPlots data using the saturated pa
 
         -   /species: Individuals in a site are grouped as their species
 
-        -   /diameter_site.R: Individuals in a site are grouped into small or large by diameter
+        -   /diameter.R: Individuals in a site are grouped into small or large by diameter
 
         -   /crown_class: Individuals in a site are grouped as their crown class
 

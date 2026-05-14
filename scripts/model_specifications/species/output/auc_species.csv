@@ -1,0 +1,652 @@
+"","site","types","auc_score","n_points"
+"1","Frankland","Eucalyptus diversicolor",0.539514760502049,61
+"2","Frankland","Eucalyptus guilfoylei",0.627090753293505,102
+"3","Frankland","Non-euc",0.686589167668269,26
+"4","Collins","Eucalyptus diversicolor",0.532378440679506,86
+"5","Frankland","Eucalyptus guilfoylei",0.627090753293505,102
+"6","Collins","Non-euc",0.485555013020833,30
+"7","Collins","Eucalyptus diversicolor",0.532378440679506,86
+"8","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"9","Clare","Non-euc",0.532314177482359,62
+"10","Clare","Eucalyptus jacksonii",0.516477231626157,27
+"11","Sutton","Eucalyptus diversicolor",0.54404296875,150
+"12","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"13","Sutton","Non-euc",0.771931966145833,27
+"14","Clare","Eucalyptus jacksonii",0.516477231626157,27
+"15","Sutton","Corymbia calophylla",0.714160316868832,76
+"16","Sutton","Eucalyptus diversicolor",0.54404296875,150
+"17","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"18","Giants","Non-euc",0.652285621279762,84
+"19","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"20","Giants","Corymbia calophylla",0.71495361328125,10
+"21","Warren","Eucalyptus diversicolor",0.529570957399764,106
+"22","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"23","Warren","Non-euc",0.596499559355945,41
+"24","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"25","Giants","Corymbia calophylla",0.71495361328125,10
+"26","Dawson","Eucalyptus diversicolor",0.514556517083961,83
+"27","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"28","Dawson","Non-euc",0.534578450520833,75
+"29","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"30","Giants","Corymbia calophylla",0.71495361328125,10
+"31","Carey","Eucalyptus diversicolor",0.558890206473214,56
+"32","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"33","Carey","Non-euc",0.557449001736111,45
+"34","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"35","Carey","Corymbia calophylla",0.620414733886719,16
+"36","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"37","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"38","Dombakup","Non-euc",0.507862493620446,199
+"39","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"40","Carey","Corymbia calophylla",0.620414733886719,16
+"41","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"42","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"43","Bird","Non-euc",0.510000708795363,310
+"44","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"45","Carey","Corymbia calophylla",0.620414733886719,16
+"46","Bird","Eucalyptus obliqua",0.55849819841056,145
+"47","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"48","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"49","Flowerdale","Non-euc",0.560191046331347,194
+"50","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"51","Carey","Corymbia calophylla",0.620414733886719,16
+"52","Flowerdale","Eucalyptus obliqua",0.524558392693015,170
+"53","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"54","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"55","Dip","Non-euc",0.50447205354148,559
+"56","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"57","Carey","Corymbia calophylla",0.620414733886719,16
+"58","Dip","Eucalyptus obliqua",0.464928763253348,56
+"59","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"60","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"61","Weld","Non-euc",0.524485085227273,165
+"62","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"63","Carey","Corymbia calophylla",0.620414733886719,16
+"64","Weld","Eucalyptus obliqua",0.709893588362069,29
+"65","Weld","Eucalyptus regnans",0.652736118861607,77
+"66","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"67","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"68","ZigZag","Non-euc",0.521418777937742,776
+"69","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"70","Carey","Corymbia calophylla",0.620414733886719,16
+"71","ZigZag","Eucalyptus obliqua",0.503894360034497,231
+"72","ZigZag","Eucalyptus regnans",0.808013916015625,14
+"73","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"74","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"75","NorthStyx","Non-euc",0.632009156992738,142
+"76","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"77","Carey","Corymbia calophylla",0.620414733886719,16
+"78","ZigZag","Eucalyptus obliqua",0.503894360034497,231
+"79","NorthStyx","Eucalyptus regnans",0.526346327383307,237
+"80","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"81","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"82","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"83","NorthStyx","Non-euc",0.632009156992738,142
+"84","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"85","Carey","Corymbia calophylla",0.620414733886719,16
+"86","Newline","Eucalyptus obliqua",0.702851295471191,64
+"87","NorthStyx","Eucalyptus regnans",0.526346327383307,237
+"88","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"89","Newline","Eucalyptus cypellocarpa",0.62766789815512,83
+"90","Newline","Eucalyptus fastigata",0.561223810369318,132
+"91","Newline","Eucalyptus radiata",0.767391429227941,17
+"92","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"93","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"94","NorthStyx","Non-euc",0.632009156992738,142
+"95","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"96","Carey","Corymbia calophylla",0.620414733886719,16
+"97","WaratahMix","Eucalyptus obliqua",0.509046651549258,59
+"98","NorthStyx","Eucalyptus regnans",0.526346327383307,237
+"99","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"100","WaratahMix","Eucalyptus cypellocarpa",0.588173606178977,44
+"101","WaratahMix","Eucalyptus fastigata",0.605613594624534,67
+"102","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"103","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"104","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"105","WogWay","Non-euc",0.716666666666667,15
+"106","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"107","Carey","Corymbia calophylla",0.620414733886719,16
+"108","WogWay","Eucalyptus obliqua",0.747077941894531,16
+"109","NorthStyx","Eucalyptus regnans",0.526346327383307,237
+"110","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"111","WaratahMix","Eucalyptus cypellocarpa",0.588173606178977,44
+"112","WogWay","Eucalyptus fastigata",0.662476586513832,61
+"113","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"114","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"115","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"116","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"117","Goodenia","Non-euc",0.654711271587171,38
+"118","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"119","Carey","Corymbia calophylla",0.620414733886719,16
+"120","WogWay","Eucalyptus obliqua",0.747077941894531,16
+"121","NorthStyx","Eucalyptus regnans",0.526346327383307,237
+"122","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"123","WaratahMix","Eucalyptus cypellocarpa",0.588173606178977,44
+"124","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"125","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"126","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"127","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"128","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"129","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"130","Goodenia","Non-euc",0.654711271587171,38
+"131","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"132","Carey","Corymbia calophylla",0.620414733886719,16
+"133","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"134","NorthStyx","Eucalyptus regnans",0.526346327383307,237
+"135","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"136","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"137","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"138","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"139","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"140","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"141","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"142","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"143","ANU101","Non-euc",0.545417218168905,121
+"144","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"145","Carey","Corymbia calophylla",0.620414733886719,16
+"146","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"147","ANU101","Eucalyptus regnans",0.577497638639856,122
+"148","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"149","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"150","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"151","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"152","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"153","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"154","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"155","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"156","Ada Tree","Non-euc",0.535522955149291,247
+"157","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"158","Carey","Corymbia calophylla",0.620414733886719,16
+"159","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"160","Ada Tree","Eucalyptus regnans",0.482293909246271,176
+"161","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"162","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"163","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"164","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"165","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"166","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"167","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"168","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"169","Weeaproinah","Non-euc",0.464394982181378,536
+"170","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"171","Carey","Corymbia calophylla",0.620414733886719,16
+"172","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"173","Weeaproinah","Eucalyptus regnans",0.49969457096084,241
+"174","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"175","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"176","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"177","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"178","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"179","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"180","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"181","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"182","ANU589","Non-euc",0.669625830462598,127
+"183","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"184","Carey","Corymbia calophylla",0.620414733886719,16
+"185","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"186","ANU589","Eucalyptus regnans",0.545829671223958,150
+"187","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"188","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"189","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"190","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"191","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"192","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"193","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"194","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"195","Turtons","Non-euc",0.505974767165633,393
+"196","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"197","Carey","Corymbia calophylla",0.620414733886719,16
+"198","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"199","Turtons","Eucalyptus regnans",0.501174926757812,80
+"200","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"201","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"202","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"203","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"204","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"205","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"206","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"207","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"208","Lardner","Non-euc",0.499110371847181,337
+"209","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"210","Carey","Corymbia calophylla",0.620414733886719,16
+"211","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"212","Lardner","Eucalyptus regnans",0.510014493700484,142
+"213","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"214","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"215","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"216","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"217","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"218","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"219","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"220","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"221","HardyCreek","Non-euc",0.543826016512784,66
+"222","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"223","Carey","Corymbia calophylla",0.620414733886719,16
+"224","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"225","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"226","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"227","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"228","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"229","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"230","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"231","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"232","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"233","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"234","MinesRd","Non-euc",0.619594080307904,170
+"235","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"236","Carey","Corymbia calophylla",0.620414733886719,16
+"237","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"238","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"239","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"240","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"241","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"242","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"243","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"244","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"245","MinesRd","Eucalyptus microcorys",0.725261487458882,19
+"246","MinesRd","Eucalyptus pilularis",0.545467979029605,76
+"247","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"248","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"249","Tinebank","Non-euc",0.524044866147249,368
+"250","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"251","Carey","Corymbia calophylla",0.620414733886719,16
+"252","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"253","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"254","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"255","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"256","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"257","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"258","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"259","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"260","MinesRd","Eucalyptus microcorys",0.725261487458882,19
+"261","Tinebank","Eucalyptus pilularis",0.501537181712963,27
+"262","Tinebank","Syncarpia glomulifera subsp glabra",0.601899745100636,59
+"263","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"264","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"265","Lorne","Non-euc",0.529333675608915,204
+"266","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"267","Carey","Corymbia calophylla",0.620414733886719,16
+"268","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"269","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"270","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"271","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"272","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"273","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"274","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"275","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"276","Lorne","Eucalyptus microcorys",0.58705088297526,120
+"277","Lorne","Eucalyptus pilularis",0.61990966796875,45
+"278","Tinebank","Syncarpia glomulifera subsp glabra",0.601899745100636,59
+"279","Lorne","Eucalyptus saligna",0.780474853515625,10
+"280","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"281","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"282","BirdTree","Non-euc",0.514729512095963,466
+"283","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"284","Carey","Corymbia calophylla",0.620414733886719,16
+"285","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"286","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"287","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"288","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"289","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"290","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"291","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"292","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"293","BirdTree","Eucalyptus microcorys",0.49773265697338,27
+"294","BirdTree","Eucalyptus pilularis",0.526902290239726,73
+"295","BirdTree","Syncarpia glomulifera subsp glabra",0.563827022429435,31
+"296","Lorne","Eucalyptus saligna",0.780474853515625,10
+"297","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"298","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"299","A-Tree","Non-euc",0.47880135595271,226
+"300","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"301","Carey","Corymbia calophylla",0.620414733886719,16
+"302","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"303","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"304","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"305","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"306","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"307","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"308","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"309","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"310","A-Tree","Eucalyptus microcorys",0.590853271484375,50
+"311","A-Tree","Eucalyptus pilularis",0.485113525390625,160
+"312","BirdTree","Syncarpia glomulifera subsp glabra",0.563827022429435,31
+"313","Lorne","Eucalyptus saligna",0.780474853515625,10
+"314","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"315","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"316","BlackBull","Non-euc",0.556327928299023,211
+"317","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"318","Carey","Corymbia calophylla",0.620414733886719,16
+"319","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"320","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"321","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"322","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"323","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"324","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"325","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"326","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"327","A-Tree","Eucalyptus microcorys",0.590853271484375,50
+"328","BlackBull","Eucalyptus pilularis",0.573665073939732,56
+"329","BirdTree","Syncarpia glomulifera subsp glabra",0.563827022429435,31
+"330","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"331","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"332","BlackBull","Syncarpia glomulifera subsp glomulifera",0.563225848858173,65
+"333","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"334","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"335","Bruxner","Non-euc",0.527818530385945,651
+"336","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"337","Carey","Corymbia calophylla",0.620414733886719,16
+"338","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"339","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"340","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"341","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"342","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"343","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"344","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"345","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"346","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"347","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"348","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"349","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"350","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"351","BlackBull","Syncarpia glomulifera subsp glomulifera",0.563225848858173,65
+"352","Bruxner","Eucalyptus grandis",0.566436161268626,151
+"353","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"354","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"355","Osullivans","Non-euc",0.554888916015625,320
+"356","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"357","Carey","Corymbia calophylla",0.620414733886719,16
+"358","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"359","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"360","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"361","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"362","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"363","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"364","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"365","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"366","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"367","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"368","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"369","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"370","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"371","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"372","Osullivans","Eucalyptus grandis",0.605743128225344,109
+"373","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"374","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"375","Herberton","Non-euc",0.617725190662202,42
+"376","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"377","Carey","Corymbia calophylla",0.620414733886719,16
+"378","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"379","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"380","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"381","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"382","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"383","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"384","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"385","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"386","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"387","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"388","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"389","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"390","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"391","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"392","Herberton","Eucalyptus grandis",0.705170931881421,73
+"393","Herberton","Corymbia intermedia",0.700198933229608,118
+"394","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"395","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"396","Lamb Range","Non-euc",0.536942949946623,161
+"397","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"398","Carey","Corymbia calophylla",0.620414733886719,16
+"399","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"400","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"401","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"402","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"403","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"404","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"405","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"406","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"407","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"408","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"409","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"410","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"411","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"412","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"413","Lamb Range","Eucalyptus grandis",0.519965203253777,91
+"414","Herberton","Corymbia intermedia",0.700198933229608,118
+"415","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"416","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"417","Baldy","Non-euc",0.648295950382314,94
+"418","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"419","Carey","Corymbia calophylla",0.620414733886719,16
+"420","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"421","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"422","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"423","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"424","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"425","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"426","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"427","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"428","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"429","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"430","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"431","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"432","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"433","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"434","Baldy","Eucalyptus grandis",0.585430908203125,60
+"435","Baldy","Corymbia intermedia",0.632500542534722,36
+"436","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"437","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"438","Koombooloomba","Non-euc",0.557591643156829,270
+"439","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"440","Carey","Corymbia calophylla",0.620414733886719,16
+"441","Candelo","Eucalyptus obliqua",0.535800621157787,122
+"442","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"443","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"444","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"445","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"446","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"447","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"448","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"449","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"450","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"451","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"452","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"453","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"454","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"455","Koombooloomba","Eucalyptus grandis",0.592119891826923,65
+"456","Koombooloomba","Corymbia intermedia",0.628977457682292,12
+"457","Koombooloomba","Syncarpia glomulifera",0.502963158392137,31
+"458","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"459","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"460","BlackRiver","Non-euc",0.560792631261489,340
+"461","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"462","Carey","Corymbia calophylla",0.620414733886719,16
+"463","BlackRiver","Eucalyptus obliqua",0.550618628933005,146
+"464","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"465","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"466","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"467","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"468","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"469","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"470","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"471","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"472","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"473","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"474","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"475","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"476","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"477","Koombooloomba","Eucalyptus grandis",0.592119891826923,65
+"478","Koombooloomba","Corymbia intermedia",0.628977457682292,12
+"479","Koombooloomba","Syncarpia glomulifera",0.502963158392137,31
+"480","BlackRiver","Eucalyptus ovata",0.600381785425647,58
+"481","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"482","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"483","BondTier","Non-euc",0.518811247189051,403
+"484","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"485","Carey","Corymbia calophylla",0.620414733886719,16
+"486","BondTier","Eucalyptus obliqua",0.533736419677734,80
+"487","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"488","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"489","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"490","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"491","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"492","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"493","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"494","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"495","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"496","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"497","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"498","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"499","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"500","Koombooloomba","Eucalyptus grandis",0.592119891826923,65
+"501","Koombooloomba","Corymbia intermedia",0.628977457682292,12
+"502","Koombooloomba","Syncarpia glomulifera",0.502963158392137,31
+"503","BlackRiver","Eucalyptus ovata",0.600381785425647,58
+"504","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"505","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"506","Supersite","Non-euc",0.557844253981612,311
+"507","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"508","Carey","Corymbia calophylla",0.620414733886719,16
+"509","Supersite","Eucalyptus obliqua",0.535073707217262,105
+"510","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"511","NorthStyx","Eucalyptus delegatensis",0.758183479309082,64
+"512","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"513","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"514","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"515","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"516","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"517","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"518","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"519","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"520","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"521","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"522","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"523","Koombooloomba","Eucalyptus grandis",0.592119891826923,65
+"524","Koombooloomba","Corymbia intermedia",0.628977457682292,12
+"525","Koombooloomba","Syncarpia glomulifera",0.502963158392137,31
+"526","BlackRiver","Eucalyptus ovata",0.600381785425647,58
+"527","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"528","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"529","Mackenzie","Non-euc",0.592889878356341,206
+"530","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"531","Carey","Corymbia calophylla",0.620414733886719,16
+"532","Supersite","Eucalyptus obliqua",0.535073707217262,105
+"533","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"534","Mackenzie","Eucalyptus delegatensis",0.517853197468891,221
+"535","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"536","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"537","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"538","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"539","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"540","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"541","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"542","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"543","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"544","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"545","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"546","Koombooloomba","Eucalyptus grandis",0.592119891826923,65
+"547","Koombooloomba","Corymbia intermedia",0.628977457682292,12
+"548","Koombooloomba","Syncarpia glomulifera",0.502963158392137,31
+"549","BlackRiver","Eucalyptus ovata",0.600381785425647,58
+"550","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"551","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"552","MtMaurice","Non-euc",0.603205894356343,67
+"553","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"554","Carey","Corymbia calophylla",0.620414733886719,16
+"555","Supersite","Eucalyptus obliqua",0.535073707217262,105
+"556","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"557","MtMaurice","Eucalyptus delegatensis",0.600081867232746,259
+"558","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"559","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"560","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"561","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"562","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"563","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"564","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"565","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"566","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"567","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"568","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"569","Koombooloomba","Eucalyptus grandis",0.592119891826923,65
+"570","Koombooloomba","Corymbia intermedia",0.628977457682292,12
+"571","Koombooloomba","Syncarpia glomulifera",0.502963158392137,31
+"572","BlackRiver","Eucalyptus ovata",0.600381785425647,58
+"573","MtMaurice","Eucalyptus dalrympleana",0.589911566840278,72
+"574","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"575","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"576","BenRidge","Non-euc",0.511601352235347,209
+"577","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"578","Carey","Corymbia calophylla",0.620414733886719,16
+"579","Supersite","Eucalyptus obliqua",0.535073707217262,105
+"580","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"581","BenRidge","Eucalyptus delegatensis",0.522483543113426,324
+"582","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"583","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"584","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"585","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"586","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"587","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"588","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"589","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"590","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"591","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"592","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"593","Koombooloomba","Eucalyptus grandis",0.592119891826923,65
+"594","Koombooloomba","Corymbia intermedia",0.628977457682292,12
+"595","Koombooloomba","Syncarpia glomulifera",0.502963158392137,31
+"596","BlackRiver","Eucalyptus ovata",0.600381785425647,58
+"597","MtMaurice","Eucalyptus dalrympleana",0.589911566840278,72
+"598","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"599","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"600","MtField","Non-euc",0.52470986137177,358
+"601","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"602","Carey","Corymbia calophylla",0.620414733886719,16
+"603","Supersite","Eucalyptus obliqua",0.535073707217262,105
+"604","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"605","MtField","Eucalyptus delegatensis",0.636847301922013,113
+"606","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"607","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"608","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"609","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"610","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"611","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"612","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"613","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"614","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"615","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"616","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"617","Koombooloomba","Eucalyptus grandis",0.592119891826923,65
+"618","Koombooloomba","Corymbia intermedia",0.628977457682292,12
+"619","Koombooloomba","Syncarpia glomulifera",0.502963158392137,31
+"620","BlackRiver","Eucalyptus ovata",0.600381785425647,58
+"621","MtMaurice","Eucalyptus dalrympleana",0.589911566840278,72
+"622","MtField","Eucalyptus coccifera",0.740208851207386,55
+"623","MtField","Eucalyptus subcrenulata",0.572301561587325,107
+"624","MtField","Eucalyptus urnigera",0.612165971235795,33
+"625","Dombakup","Eucalyptus diversicolor",0.522993134289253,82
+"626","Clare","Eucalyptus guilfoylei",0.632680257161458,12
+"627","Caveside","Non-euc",0.522212306155434,1264
+"628","Giants","Eucalyptus jacksonii",0.745466825977856,151
+"629","Carey","Corymbia calophylla",0.620414733886719,16
+"630","Caveside","Eucalyptus obliqua",0.535077546772204,76
+"631","HardyCreek","Eucalyptus regnans",0.518960722794769,141
+"632","Caveside","Eucalyptus delegatensis",0.553046198174505,101
+"633","Candelo","Eucalyptus cypellocarpa",0.592014857700893,21
+"634","Goodenia","Eucalyptus fastigata",0.565086793363764,89
+"635","WaratahMix","Eucalyptus radiata",0.601821727966994,89
+"636","WogWay","Eucalyptus viminalis",0.659976414271763,112
+"637","Goodenia","Eucalyptus sieberi",0.653384399414062,20
+"638","Bruxner","Eucalyptus microcorys",0.664164225260417,12
+"639","Bruxner","Eucalyptus pilularis",0.855987548828125,12
+"640","Bruxner","Syncarpia glomulifera subsp glabra",0.74029541015625,26
+"641","BlackBull","Eucalyptus saligna",0.681371053059896,12
+"642","BlackBull","Eucalyptus andrewsii",0.697337431066177,17
+"643","Osullivans","Syncarpia glomulifera subsp glomulifera",0.566424919577206,85
+"644","Koombooloomba","Eucalyptus grandis",0.592119891826923,65
+"645","Koombooloomba","Corymbia intermedia",0.628977457682292,12
+"646","Koombooloomba","Syncarpia glomulifera",0.502963158392137,31
+"647","BlackRiver","Eucalyptus ovata",0.600381785425647,58
+"648","MtMaurice","Eucalyptus dalrympleana",0.589911566840278,72
+"649","MtField","Eucalyptus coccifera",0.740208851207386,55
+"650","MtField","Eucalyptus subcrenulata",0.572301561587325,107
+"651","MtField","Eucalyptus urnigera",0.612165971235795,33

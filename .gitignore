@@ -58,6 +58,7 @@ data/GPP
 data/NDVI_Max
 data/NDVI_Mean
 data/PET
+data/austraits
 output/intra_sites.png
 output/intra_sites2.png
 output/summary_traits.csv

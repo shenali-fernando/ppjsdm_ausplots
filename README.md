@@ -1,6 +1,6 @@
 # PPJSDM on AusPlots Dataset
 
-### Motivation and Aim
+### Project Description
 
 This repo contains the analysis on the TERN AusPlots data using the saturated parwise interaction Gibbs point process (ppjsdm) model. The AusPlot dataset is a set of 48 1-ha plots in tall eucalypt forests that have been fully mapped for all trees larger than 10cm DBH. We have a number of expectations based on the large literature of spatial studies in tropical, subtropical, temperate deciduous and coniferous forests for the way forests should be spatially structured. Yet, there is little examination of forets in temperate broadleaf forests. The aim of this study was to understand the spatial structure of temperate broadleaf forests by way of modelling the interactions between trees in the AusPlots dataset using size, species and functional type (subcanopy or canopy) identity.
 

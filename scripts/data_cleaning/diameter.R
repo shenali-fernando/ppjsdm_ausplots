@@ -65,7 +65,7 @@ ggplot(com_eucs, aes(x = Diameter, fill = new_cc)) +
 library(ggpubr)
 library(cowplot)
 
-diam <- gghistogram(com_eucs,
+diam <- gghistogram(com_eucs, 
             x = "Diameter", 
             y = "count", 
             fill = "new_cc",

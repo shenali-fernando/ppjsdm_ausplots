@@ -1,4 +1,4 @@
-Species,Class
+Genus_Species,Class
 Acacia dealbata,Subcanopy
 Acacia melanoxylon,Subcanopy
 Acacia mucronata,Subcanopy
@@ -15,6 +15,8 @@ Corymbia intermedia,Canopy
 Cryptocarya glaucescens,Subcanopy
 Cryptocarya microneura,Subcanopy
 Cryptocarya rigida,Subcanopy
+Flindersia brayleyana,Canopy
+Eucalyptus andrewsii,Canopy
 Eucalyptus coccifera,Canopy
 Eucalyptus cypellocarpa,Canopy
 Eucalyptus dalrympleana,Canopy
@@ -25,11 +27,15 @@ Eucalyptus grandis,Canopy
 Eucalyptus guilfoylei,Canopy
 Eucalyptus jacksonii,Canopy
 Eucalyptus microcorys,Canopy
+Eucalyptus nitens,Canopy
 Eucalyptus obliqua,Canopy
 Eucalyptus ovata,Canopy
 Eucalyptus pilularis,Canopy
 Eucalyptus radiata,Canopy
 Eucalyptus regnans,Canopy
+Eucalyptus resinifera,Canopy
+Eucalyptus saligna,Canopy
+Eucalyptus sieberi,Canopy
 Eucalyptus subcrenulata,Canopy
 Eucalyptus urnigera,Canopy
 Eucalyptus viminalis,Canopy
@@ -37,9 +43,12 @@ Geissois benthamii,Subcanopy
 Hedycarya angustifolia,Subcanopy
 Leptospermum lanigerum,Subcanopy
 Leptospermum scoparium,Subcanopy
+Litsea australis,Subcanopy
+Lomatia fraseri,Subcanopy
 Lophostemon sp.,Subcanopy
 Monotoca glauca,Subcanopy
 Nematolepis squamea,Subcanopy
+Nematolepis squamea subsp squamea,Subcanopy
 Niemeyeria whitei,Subcanopy
 Nothofagus cunninghamii,Subcanopy
 Olearia argophylla,Subcanopy
@@ -51,6 +60,10 @@ Pomaderris aspera,Subcanopy
 Schizomeria ovata,Subcanopy
 Sloanea langii,Subcanopy
 Syncarpia glomulifera,Canopy
+Syncarpia glomulifera subsp glomulifera,Canopy
+Syncarpia glomulifera subsp glabra,Canopy
+Synoum glandulosum subsp glandulsoum,Subcanopy
 Tasmannia lanceolata,Subcanopy
+Trochocarpa laurina,Subcanopy
 Trymalium odoratissimum,Subcanopy
 Zieria arborescens,Subcanopy

@@ -1,0 +1,349 @@
+---
+title: "FG_size"
+format: html
+editor: visual
+---
+
+## Functional Group by Size Model
+
+```{r}
+library(ppjsdm)
+library(dplyr)
+library(tidyr)
+library(ggpubr)
+library(patchwork)
+library(tidyr)
+```
+
+\
+Load data
+
+```{r}
+data <- read.csv("../../data/ausplots/data_cleaned.csv")
+```
+
+Load species functional groups (FG)
+
+```{r}
+fg <- read.csv("../../data/ausplots/species_class.csv")
+```
+
+#### Select threshold for size
+
+To set up a function group by size model we first need make groups into their function group (FG), and then use this to divide individuals into relatively large or relatively small individuals of the FG.
+
+First attach the species_classes FG to data_cleaned
+
+```{r}
+#something strange happened to df so get rid of weird encoding 
+fg <- fg %>% 
+  mutate(Genus_Species = iconv(Genus_Species, to = "ASCII", sub = " "))
+
+#join into df 
+data1 <- left_join(data, fg, 
+                   by = "Genus_Species")
+
+data1 %>% count(Class) #some species are not in the fg csv so nas
+```
+
+Check what species have an NA for class
+
+```{r}
+nas <- data1 %>% filter(is.na(Class)) 
+
+nas %>% count(Genus_Species, sort = T)
+```
+
+Most are looking like understorey trees but we can plot the diameter of them quickly:
+
+```{r}
+nas %>% filter(! Genus_Species == "Unidentified tree") %>% 
+  ggplot() + 
+  geom_histogram(aes(x = Diameter)) + 
+  theme_bw()
+```
+
+\
+Can compare this to the range of diameters (sizes) in species we have given an FG to already:
+
+```{r}
+d2 <- data1 %>% filter(!is.na(Class))  
+
+diam <- gghistogram(d2,
+            x = "Diameter", 
+            y = "count", 
+            fill = "Class",
+            bins = 50, 
+            rug = TRUE,
+            add_density = FALSE) +
+        xlim(0, 200)
+
+diam
+```
+
+Right, as expected flat distribution of canopy and more left skewed (one bin has most individuals) of subcanopy. A quick look at the species that haven't been given an FG shows that the ones with the biggest diameters are still understorey trees. So, we can hardcode all of the leftover species into the subcanopy group. We keep the unidentified trees as unidentified as we can use this as a misc class:
+
+```{r}
+data1 <- data1 %>% 
+  mutate(Class = if_else(Genus_Species == "Unidentified tree", "Unid tree",Class)) %>% 
+  mutate(Class = if_else(is.na(Class), "Subcanopy", Class))
+
+data1 %>% count(Class)
+```
+
+Check the distribution of subcanopy to canopy individuals:
+
+```{r}
+data1 %>% count(Class)
+```
+
+There are three sites with enough unidentified trees to be important:
+
+-   Bruxner 147
+
+-   Osullivans 128
+
+-   Tinebank 123
+
+We will leave these as is for the moment.
+
+### Run PPJSDM for all sites
+
+So, the function to output the fit with a group being a fg x site:
+
+```{r}
+fg_size_sites <- function(site, #single site 
+                       show_size_freq = TRUE,
+                       config_only = FALSE, #if TRUE, returns config only and exits function
+                       threshold = 15, 
+                       short_range = 10, 
+                       short_model = "exponential"){ #threshold to exclude a group 
+
+  df <- data1 %>%
+    filter(Site_Name == site)
+  
+  
+  #jitter coordinates
+  df <- df %>%
+    mutate(
+      is_duplicated = n() > 1, #create column of TRUE/FALSE 
+      #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
+      x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
+      y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
+    ) 
+  
+  
+  #make groups of fg x size  
+    d <- df %>%
+      group_by(Class) %>% 
+      mutate(median_diameter = ceiling(median(Diameter, na.rm = TRUE)) + 3.5)  %>% 
+      mutate(size = case_when(
+                                Diameter < median_diameter ~ "small", 
+                                Diameter >= median_diameter ~ "large")) %>% 
+      ungroup() %>% 
+      mutate(new_group = paste0(Class, sep = " ", size)) %>% 
+      group_by(new_group) %>% 
+      mutate(observation_count = n()) %>% 
+      ungroup() %>% 
+      filter(!(observation_count < threshold))
+ 
+    
+  #make config
+  configuration <- ppjsdm::Configuration(d$x_jitter,
+                                         d$y_jitter, 
+                                         types = d$new_group)
+  plot(configuration)
+  
+  if(config_only){
+    return(configuration)
+  }
+  
+  d %>% count(new_group)
+  
+   #set parameters 
+  window <- ppjsdm::Rectangle_window(x_range = c(0, 100), 
+                                     y_range = c(0, 100))
+  
+  nspecies <- length(levels(configuration$types))
+  
+set.seed(1030)  
+  #fit model 
+  fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
+                       window = window,
+                       short_range = matrix(10, nspecies, nspecies), 
+                       model = "exponential",
+                       saturation = 10, 
+                       nthreads = 4, 
+                       use_regularization = FALSE, 
+                       fitting_package = "glmnet",
+                       dummy_distribution = "stratified",
+                       min_dummy = 1, dummy_factor = 1e10, 
+                       max_dummy = 1e3)
+
+  
+  sum <- summary(fit)
+  sum
+  return(list(fit = fit, sum = sum, config = configuration))
+}
+```
+
+Before running function need to source the make_summary_fun
+
+```{r}
+source("../../functions/make_summary_fun.R")
+```
+
+Run function for all sites in ausplots:
+
+```{r}
+sites <- unique(data1$Site_Name)
+
+full_df <- data.frame(matrix(ncol = 9, nrow = 0))
+colnames(full_df) <- c("from", "to", "alpha", "lo", "hi", "lo_numerical",
+                       "hi_numerical", "Potential","site")
+
+set.seed(3)
+for (i in sites){
+  
+  fg_size_mod <- fg_size_sites(site = i, #single site 
+                         show_size_freq = FALSE,
+                         config_only = FALSE, #if TRUE, returns config only and exits function
+                         threshold = 15, 
+                         short_range = 10, 
+                         short_model = "exponential")
+  
+  working_df <- make_sum_df(fits = list(fg_size_mod$fit), #use make_summary_df function to output summary as df 
+                            summ = list(fg_size_mod$sum))
+  
+  working_df <- working_df %>% mutate(site = i)                              
+  
+  full_df<- rbind(full_df, working_df)
+}
+
+
+```
+
+First, need to check if any species that didn't have a class assigned snuck through:
+
+```{r}
+full_df %>% count(from)
+
+full_df %>% count(to)
+```
+
+Check if there are unreasonable CIs and there's none.
+
+```{r}
+full_df<- full_df %>% 
+  mutate(range_ci = hi - lo)
+
+a <- full_df %>% filter(range_ci > 5)
+a %>% count(site)
+```
+
+#### Prepare dataframe for visualisation
+
+Make some new columns to make visualisation a bit easier:
+
+```{r}
+fg_size_df <- full_df %>% 
+  mutate(size_from = gsub("^[^ ]*", "", from)) %>% 
+  mutate(size_to = gsub("^[^ ]*", "", to)) %>% 
+  mutate(class_from = gsub(" .*", "", from)) %>% 
+  mutate(class_to = gsub(" .*", "", to)) %>% 
+  mutate(int = paste0(from, "_", to)) %>% 
+  mutate(size_int = paste0(size_from, "", size_to))
+```
+
+Add new column to delimitate for within a functional group and between a functional group:
+
+```{r}
+fg_size_df <- fg_size_df %>% 
+  mutate(which = if_else(int %in% c("Subcanopy small_Subcanopy small", "Subcanopy small_Subcanopy large", "Subcanopy large_Subcanopy large", "Canopy small_Canopy small", "Canopy small_Canopy large", "Canopy large_Canopy large"), 
+                         "within", 
+                         "between"))
+
+fg_size_df %>% count(which)
+```
+
+Check size ints
+
+```{r}
+fg_size_df %>% count(size_int)
+
+fg_size_df <- fg_size_df %>% 
+  mutate(size_int = if_else(size_int %in% c(" large small", " small large"), 
+                            "small large", 
+                            size_int))
+```
+
+Save out df
+
+```{r}
+write.csv(fg_size_df, "fg_size_df.csv")
+```
+
+#### Visualisation
+
+Let's spilt so within v between a functional group for better understanding (and comparison to the species model):
+
+```{r}
+fg_size_df %>% filter(!from %in% c("Unid tree small", "Unid tree large")) %>% 
+  filter(! to %in% c("Unid tree small", "Unid tree large")) %>% 
+ggplot(
+       aes(x = alpha, 
+           y = int)) + 
+  geom_boxplot() + 
+  geom_point(alpha = 0.25) + 
+  theme_bw() + 
+  geom_vline(xintercept = 0, colour = "red") + 
+  facet_wrap(~which)
+```
+
+Can also make an overall boxplot similar to current Fig 1 of intraspecific interactions with FG put in later:
+
+```{r}
+#| fig-width: 9
+
+fg_size_df %>% 
+  filter(!from %in% c("Unid tree small", "Unid tree large")) %>% 
+  mutate(size_int = case_when(
+    size_int == " small small" ~ "Small ↔ Small", 
+    size_int == "small large" ~ "Small ↔ Large", 
+    size_int == " large large" ~ "Large ↔ Large")) %>% 
+  ggplot(aes(x = alpha, y = size_int, colour = int)) + 
+  geom_violin(colour = "black", 
+              scale = "width", 
+              width = 0.7,
+              fill = NA,
+              position = position_dodge(0.75)) +
+  geom_boxplot(colour = "black", position = position_dodge(0.75),
+               outlier.shape = NA, 
+               fill = NA,
+               width = 0.4) + 
+  geom_point(aes(colour = int), 
+             position = position_jitterdodge(seed = 21, 
+                                             jitter.width = 0.3,
+                                             dodge.width = 0.75), 
+             shape = 19, 
+             size = 1.75, 
+             alpha = 0.5) +
+  geom_vline(xintercept = 0, colour = "red") +
+  ylab("") +
+  theme_bw()
+```
+
+Can also understand at the site level what is happening:
+
+```{r}
+#| fig-height: 6
+
+fg_size_df %>%
+  filter(!from %in% c("Unid tree small", "Unid tree large")) %>% 
+  filter(which == "within") %>% 
+ggplot(aes(x = alpha, y = site, colour = int)) + 
+  geom_point() + 
+  ggtitle("Within FG") +
+  geom_vline(xintercept = 0, colour = "red") + 
+  theme_bw()
+```

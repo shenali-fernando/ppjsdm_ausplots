@@ -1,4 +1,4 @@
-,from,to,alpha,lo,hi,lo_numerical,hi_numerical,Potential,site,range_ci,class_from,class_to,species_from,species_to,class_int,georegion,region,sig,cc_to,cc_from,cc_int
+,from,to,alpha,lo,hi,lo_numerical,hi_numerical,Potential,site,range_ci,size_from,size_to,species_from,species_to,size_int,georegion,region,sig,class_from,class_to,class_int
 1,Allocasuarina decussata small,Allocasuarina decussata small,-0.078481328,-0.739768748,0.582806091,-0.087033318,-0.069929339,Potential 1,Frankland,1.322574839,small,small,Allocasuarina decussata,Allocasuarina decussata,small_small,S_WA,WA,NA,Subcanopy,Subcanopy,Subcanopy_Subcanopy
 2,Eucalyptus diversicolor large,Allocasuarina decussata small,0.232192535,-0.29676251,0.76114758,0.22603002,0.238355051,Potential 1,Frankland,1.05791009,large,small,Eucalyptus diversicolor,Allocasuarina decussata,large_small,S_WA,WA,NA,Subcanopy,Canopy,Canopy_Subcanopy
 3,Eucalyptus diversicolor small,Allocasuarina decussata small,0.100866436,-0.090035394,0.291768266,0.09789336,0.103839512,Potential 1,Frankland,0.381803661,small,small,Eucalyptus diversicolor,Allocasuarina decussata,small_small,S_WA,WA,NA,Subcanopy,Canopy,Canopy_Subcanopy

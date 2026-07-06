@@ -19,13 +19,19 @@ library(tidyr)
 Load data
 
 ```{r}
-data <- read.csv("../../data/ausplots/data_cleaned.csv")
+data <- read.csv("../../../data/ausplots/data_cleaned.csv")
 ```
 
 Load species functional groups (FG)
 
 ```{r}
-fg <- read.csv("../../data/ausplots/species_class.csv")
+fg <- read.csv("../../../data/ausplots/species_class.csv")
+```
+
+If only doing visualisation can load the df that this first part makes:
+
+```{r}
+fg_size_df <- read.csv("fg_size_df.csv")
 ```
 
 #### Select threshold for size
@@ -51,7 +57,7 @@ Check what species have an NA for class
 ```{r}
 nas <- data1 %>% filter(is.na(Class)) 
 
-nas %>% count(Genus_Species, sort = T)
+nas %>% count(Genus_Species, sort = TRUE)
 ```
 
 Most are looking like understorey trees but we can plot the diameter of them quickly:
@@ -99,11 +105,11 @@ data1 %>% count(Class)
 
 There are three sites with enough unidentified trees to be important:
 
--   Bruxner 147
+- Bruxner 147 (out of 853)
 
--   Osullivans 128
+- Osullivans 128 (out of 514)
 
--   Tinebank 123
+- Tinebank 123 (out of 454)
 
 We will leave these as is for the moment.
 
@@ -144,7 +150,9 @@ fg_size_sites <- function(site, #single site
       mutate(new_group = paste0(Class, sep = " ", size)) %>% 
       group_by(new_group) %>% 
       mutate(observation_count = n()) %>% 
-      ungroup() %>% 
+      ungroup() 
+    d %>% count(new_group)
+     
       filter(!(observation_count < threshold))
  
     
@@ -187,10 +195,25 @@ set.seed(1030)
 }
 ```
 
+In FG + Size Model, these are the sites that are impacted by changing the threshold. Of these, even fewer are changed by moving the threshold between 10 and 15.
+
+ANU363: 1 subcanopy large, 5 subcanopy small \
+Candelo: 4 subcanopy small \
+Carey: 1 subcanopy large\
+Collins: 12 subcanopy large \
+Frankland: 9 subcanopy large\
+Goodenia: 11 subcanopy large \
+Herberton: 4 subcanopy large\
+Newline: 2 subcanopy small \
+Sutton: 3 subcanopy large \
+WaratahMix: no subcanopy anyways \
+Warren: 3 subcanopy large\
+WogWay: 3 subcanopy large, 12 subcanopy small
+
 Before running function need to source the make_summary_fun
 
 ```{r}
-source("../../functions/make_summary_fun.R")
+source("../../../functions/make_summary_fun.R")
 ```
 
 Run function for all sites in ausplots:
@@ -229,6 +252,8 @@ First, need to check if any species that didn't have a class assigned snuck thro
 full_df %>% count(from)
 
 full_df %>% count(to)
+
+full_df %>% count(site)
 ```
 
 Check if there are unreasonable CIs and there's none.
@@ -247,6 +272,7 @@ Make some new columns to make visualisation a bit easier:
 
 ```{r}
 fg_size_df <- full_df %>% 
+  filter(! from %in% c("Unid tree small", "Unid tree large")) %>% 
   mutate(size_from = gsub("^[^ ]*", "", from)) %>% 
   mutate(size_to = gsub("^[^ ]*", "", to)) %>% 
   mutate(class_from = gsub(" .*", "", from)) %>% 
@@ -272,22 +298,29 @@ Check size ints
 fg_size_df %>% count(size_int)
 
 fg_size_df <- fg_size_df %>% 
-  mutate(size_int = if_else(size_int %in% c(" large small", " small large"), 
-                            "small large", 
-                            size_int))
+  mutate(size_int = case_when(size_int %in% 
+                                c(" small large"," large small", "small large") ~ "small large", 
+                              size_int == " large large" ~ "large large", 
+                              size_int == " small small" ~ "small small", 
+                              TRUE ~ size_int)) 
+                              
 ```
 
 Save out df
 
 ```{r}
-write.csv(fg_size_df, "fg_size_df.csv")
+write.csv(fg_size_df, "fg_size_df_t15_updated.csv")
 ```
 
-#### Visualisation
+### Visualisation
 
 Let's spilt so within v between a functional group for better understanding (and comparison to the species model):
 
 ```{r}
+#| fig-width: 8
+#| fig-height: 8
+
+
 fg_size_df %>% filter(!from %in% c("Unid tree small", "Unid tree large")) %>% 
   filter(! to %in% c("Unid tree small", "Unid tree large")) %>% 
 ggplot(
@@ -300,18 +333,35 @@ ggplot(
   facet_wrap(~which)
 ```
 
-Can also make an overall boxplot similar to current Fig 1 of intraspecific interactions with FG put in later:
+Can also make an overall boxplot similar to current Fig 1 of intraspecific interactions with FG put in later.
+
+Let's look at intra-group first:
 
 ```{r}
 #| fig-width: 9
 
-fg_size_df %>% 
+fg_size_mod_within <- fg_size_df %>% 
   filter(!from %in% c("Unid tree small", "Unid tree large")) %>% 
   mutate(size_int = case_when(
     size_int == " small small" ~ "Small ↔ Small", 
     size_int == "small large" ~ "Small ↔ Large", 
     size_int == " large large" ~ "Large ↔ Large")) %>% 
-  ggplot(aes(x = alpha, y = size_int, colour = int)) + 
+  filter(which == "within") %>% 
+  mutate(int = as.factor(int)) %>% 
+  mutate(int = fct_relevel(int, "Subcanopy large_Subcanopy large", 
+                           "Subcanopy small_Subcanopy large", 
+                            "Subcanopy small_Subcanopy small",
+                           "Canopy small_Canopy small", 
+                           "Canopy small_Canopy large", 
+                           "Canopy large_Canopy large"
+                           )) %>% 
+  mutate(size_int = as.factor(size_int)) %>% 
+  mutate(size_int = fct_relevel(size_int, "Small ↔ Small", 
+                                 "Small ↔ Large", 
+                                "Large ↔ Large")) %>% 
+  mutate(class_from = as.factor(class_from)) %>% 
+  mutate(class_from = fct_relevel(class_from, "Subcanopy", "Canopy")) %>% 
+  ggplot(aes(x = alpha, y = size_int, groups = class_from)) + 
   geom_violin(colour = "black", 
               scale = "width", 
               width = 0.7,
@@ -321,7 +371,7 @@ fg_size_df %>%
                outlier.shape = NA, 
                fill = NA,
                width = 0.4) + 
-  geom_point(aes(colour = int), 
+  geom_point(aes(colour = class_from), 
              position = position_jitterdodge(seed = 21, 
                                              jitter.width = 0.3,
                                              dodge.width = 0.75), 
@@ -329,21 +379,233 @@ fg_size_df %>%
              size = 1.75, 
              alpha = 0.5) +
   geom_vline(xintercept = 0, colour = "red") +
+   # stat_summary(aes(fill = size_int), fun = mean,
+   #             geom = "point",
+   #             shape = 19,
+   #             size = 3, 
+   #             color="black",
+   #             position = position_dodge(width=0.7, preserve = "single"), 
+   #             show.legend = FALSE) + 
+  scale_colour_manual(values = c("#39568CFF", "#35B779FF"), 
+                      labels = c("Canopy", "Subcanopy"),
+                      limits = c("Canopy", "Subcanopy"),
+                      name = "Strata") +
   ylab("") +
-  theme_bw()
+  theme_bw() + 
+  ggtitle("FG Size Model") +
+  xlim(c(-1.5, 1.5))
+
+fg_size_mod_within
+
+ggsave("fg_size_mod_within.png", width = 10)
 ```
 
-Can also understand at the site level what is happening:
+This is really, really similar to the species_size model.
 
 ```{r}
-#| fig-height: 6
+fg_size_df %>% 
+  filter(!from %in% c("Unid tree small", "Unid tree large")) %>% 
+  count(site)
+```
+
+We can make a similar one for between fgs:
+
+```{r}
+fg_size_df %>% 
+  filter(!from %in% c("Unid tree small", "Unid tree large")) %>% 
+  mutate(size_int = case_when(
+    size_int == " small small" ~ "Small ↔ Small", 
+    size_int == "small large" ~ "Small ↔ Large", 
+    size_int == " large large" ~ "Large ↔ Large")) %>% 
+  filter(which == "between") %>% 
+  mutate(int = as.factor(int)) %>% 
+  ggplot(aes(x = alpha, y = rev(int))) + 
+  geom_violin(colour = "black", 
+              scale = "width", 
+              width = 0.7,
+              fill = NA,
+              position = position_dodge(0.75)) +
+  geom_boxplot(colour = "black", position = position_dodge(0.75),
+               outlier.shape = NA, 
+               fill = NA,
+               width = 0.4) + 
+  geom_point(position = position_jitterdodge(seed = 21, 
+                                             jitter.width = 0.3,
+                                             dodge.width = 0.75), 
+             shape = 19, 
+             size = 1.75, 
+             alpha = 0.5) +
+  geom_vline(xintercept = 0, colour = "red") +
+   stat_summary(aes(colour = int), fun = mean,
+               geom = "point",
+               shape = 19,
+               size = 3, 
+               color="blue",
+               show.legend = FALSE) + 
+  theme_bw() + 
+  ylab("") +  xlim(c(-1, 1))
+```
+
+This model reduces the number of interaction groups possible as there is no inter v intraspecific interaction layer on top of the within v between functional group. Therefore there is only 4 between functional group interactions. All of the interesting interactions seen in the species_size model have disappeared - espeically the one between subcanopy large - canopy small , subcanopy large - canopy large and canopy small - subcanopy large. This would change our findings quite a bit. However, this is only if we are using traditional weighted means, any other metric (mean or inverse of se weighted mean) and the mean comes in to the median and there is not much difference between the two models.
+
+We can also understand at the site level what is happening. First add the region into the df:
+
+```{r}
+fg_size_df <- fg_size_df %>% 
+   mutate(georegion = case_when(site %in% c("Weeaproinah", "Turtons", "Lardner") ~ "S_VIC", 
+                               site %in% c("ANU101", "ANU363", "ANU589", "Ada Tree", "HardyCreek") ~ "N_VIC", 
+                               site %in% c("Dawson", "Frankland", "Clare", "Giants") ~ "S_WA",
+                               site %in% c("Carey", "Dombakup", "Warren",  "Sutton","Collins") ~ "N_WA", 
+                               site %in% c("Baldy", "Koombooloomba", "Lamb Range", "Herberton") ~ "QLD", 
+                               site %in% c("MinesRd", "A-Tree", "BirdTree", "BlackBull", "Lorne", "Tinebank", "Bruxner", "Osullivans") ~ "N_NSW", 
+                               site %in% c("Newline", "WaratahMix", "WogWay", "Goodenia", "Candelo") ~ "S_NSW", 
+                               site %in% c("BenRidge", "Caveside", "Mackenzie", "MtField", "MtMaurice", "NorthStyx") ~ "d_TAS", 
+                               site %in% c("BondTier", "BlackRiver", "Weld", "MtField", "ZigZag", "Supersite", "Bird", "Flowerdale", "Dip") ~ "o_TAS")) %>% 
+   mutate(region = case_when(georegion %in% c("S_VIC", "N_VIC", "S_NSW") ~ "SE_AUS", 
+                            georegion %in% c("S_WA", "N_WA") ~ "WA",
+                            georegion %in% c("QLD", "N_NSW") ~ "N_AUS",  
+                            georegion %in% c("o_TAS", "d_TAS") ~ "SE_AUS"))
+```
+
+```{r}
+#| fig-height: 12
 
 fg_size_df %>%
   filter(!from %in% c("Unid tree small", "Unid tree large")) %>% 
-  filter(which == "within") %>% 
-ggplot(aes(x = alpha, y = site, colour = int)) + 
-  geom_point() + 
-  ggtitle("Within FG") +
+  filter(class_from == class_to) %>% 
+  ggplot(aes(x = alpha, y = site, colour = class_from)) + 
+  facet_grid(region~size_int, scales = "free") +
+  geom_point(size = 2.5) + 
+  scale_colour_manual(values = c("darkgreen", "lightgreen"), name = "") +
   geom_vline(xintercept = 0, colour = "red") + 
-  theme_bw()
+  theme_bw(base_size = 13)
+```
+
+### Comparison
+
+So we have a functional group - size model. We need to compare this to a model where we fit species size and then add the functional group on later.
+
+We can do a simple quantitative comparison. We can make some summary tables for the functional_group_size model first:
+
+```{r}
+fg_size <- fg_size_df %>% 
+  filter(!from %in% c("Unid tree small", "Unid tree large")) %>% 
+  group_by(int) %>% 
+  summarise(fg_mean = mean(alpha), 
+            fg_median = median(alpha), 
+            fg_min = min(alpha), 
+            fg_max = max(alpha)) %>% 
+  ungroup
+```
+
+Do the same for the species_size model. However this will end up being a combination of inter + intraspecific interactions therefore it makes sense that is is so similar to the fg_size model. Therefore we can spilt this one up further:
+
+```{r}
+df <- read.csv("../species_diameter/df_add3.5_t15.csv")
+
+sp_size <- df %>% 
+  group_by(group) %>% 
+    summarise(sp_mean = mean(alpha), 
+            sp_median = median(alpha), 
+            sp_min = min(alpha), 
+            sp_max = max(alpha)) %>% 
+  ungroup
+
+sp_size_intra <- df %>% 
+  filter(from == to) %>% 
+  group_by(group) %>% 
+    summarise(sp_mean = mean(alpha), 
+            sp_median = median(alpha), 
+            sp_min = min(alpha), 
+            sp_max = max(alpha)) %>% 
+  ungroup
+
+
+sp_size_inter <- df %>% 
+  filter(!from == to) %>% 
+  group_by(group) %>% 
+    summarise(sp_mean = mean(alpha), 
+            sp_median = median(alpha), 
+            sp_min = min(alpha), 
+            sp_max = max(alpha)) %>% 
+  ungroup
+
+```
+
+Easiest way to compare is to merge the two dfs. To do that need to fix the group names and rename cols:
+
+```{r}
+fg_size <- fg_size %>% 
+  mutate(int = gsub(" ", ".", int))
+
+fg_size <- fg_size %>% 
+  rename(group = int)
+
+match(fg_size$group, sp_size$group)
+
+#rename some levels 
+fg_size <- fg_size %>% 
+  mutate(group = case_when(group == "Canopy.small_Canopy.large" ~
+                       "Canopy.large_Canopy.small", 
+                       group == "Subcanopy.large_Canopy.large" ~ "Canopy.large_Subcanopy.large", 
+                       group == "Subcanopy.large_Canopy.small" ~ "Canopy.small_Subcanopy.large", 
+                       group == "Subcanopy.small_Canopy.large" ~ "Canopy.large_Subcanopy.small", 
+                       group == "Subcanopy.small_Canopy.small" ~ "Canopy.small_Subcanopy.small", 
+                       group == "Subcanopy.small_Subcanopy.large" ~ "Subcanopy.large_Subcanopy.small", 
+                       TRUE ~ group))
+```
+
+Merge the dfs.
+
+```{r}
+compares <- merge(fg_size, sp_size, by = "group") #overall very similar
+
+compares <- merge(fg_size, sp_size_intra, by = "group") #intraspecific very similar to fg 
+
+compares <- merge(fg_size, sp_size_inter, by = "group") #interspecific starts to be more different from fg 
+```
+
+```{r}
+## grab df for quick visualisation 
+fg_size_df <- read_csv("scripts/model_specifications/fg_size/fg_size_df.csv")
+
+#see what groups exist 
+groups <- fg_size_df %>% count(int)
+
+#get rid of unid trees lol 
+fg_size_df <- fg_size_df %>% 
+  filter(! class_from == "Unid") %>% 
+  filter(! class_from == "Unid")
+
+#rename for plotting
+fg_size_df <- fg_size_df %>% 
+  mutate(size_int = case_when(size_int == "small small" ~ "Small ↔ Small", 
+                               size_int == "small large" ~ "Small ↔ Large", 
+                               size_int == "large large" ~ "Large ↔ Large")) %>% 
+  mutate(size_int = as.factor(size_int)) %>% 
+  mutate(size_int = fct_relevel(size_int, "Small ↔ Small", 
+                                 "Small ↔ Large", 
+                                 "Large ↔ Large"
+  )) %>% 
+  mutate(int = as.factor(int))
+
+ggplot(fg_size_df, 
+       aes(x = alpha, 
+           y = int)) + 
+  geom_boxplot() + 
+  geom_point(alpha = 0.06) + 
+  facet_grid(rows = vars(which), 
+             scales = "free") + 
+  geom_vline(xintercept = 0, colour = "black", linetype = "dashed") + 
+  theme_bw() + 
+  ylab("")
+
+fg_size_df %>%
+  mutate(sig = ifelse(lo > 0 | hi < 0, 1 , NA)) %>% 
+  count(sig)
+
+f <- fg_size_df %>% 
+  group_by(int) %>% 
+  summarise(median = median(alpha))
+
 ```

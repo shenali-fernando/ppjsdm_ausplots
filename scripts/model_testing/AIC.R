@@ -6,19 +6,36 @@ library(ppjsdm)
 library(ggpubr)
 library(patchwork)
 
-##### Shockingly, the AIC and BIC are computed in the fit for the fit!!!!!! 
-## this would've been so useful... 
+##### Shockingly, the AIC and BIC are computed in the fit for the fit!!!
 
-# Cool, i need to understand how well each of the 5 model specifications are doing compared to each other:
-#Null, Sp, CC, Size, SpCC, SpSize
+# Cool, i need to understand how well each of the 6 model specifications are doing compared to each other:
+#Null, Sp, FG, Size, FG x Size, Sp x Size
+
+##################################################################################
+########################## NULL MODEL ###################################
 
 #make empty df 
 aic_null <- as.data.frame(matrix(ncol = 4, nrow = 48))
-colnames(aic_null) <- c("Site_Name", "AIC", "BIC", "model")
+colnames(aic_null) <- c("site", "aic", "bic", "model")
 
 #Load the data 
-data <- read.csv("data/data_cleaned.csv")
+data <- read.csv("data/ausplots/data_cleaned.csv")
+fg_data <- read.csv("data/ausplots/species_class.csv")
 
+#get the fg dataframe ready
+fg_data <- fg_data %>% 
+  mutate(Genus_Species = iconv(Genus_Species, to = "ASCII", sub = " "))
+
+data1 <- left_join(data, fg_data, 
+                   by = "Genus_Species")
+
+data1 <- data1 %>% 
+  mutate(Class = if_else(Genus_Species == "Unidentified tree", "Unid tree",Class)) %>% 
+  mutate(Class = if_else(is.na(Class), "Subcanopy", Class)) #everything not in the df is subcanopy
+
+data1 %>% count(Class)
+
+#set sites
 site_names <- unique(data$Site_Name)
 
 
@@ -56,40 +73,38 @@ for(i in seq_along(site_names)){
                         min_dummy = 1, dummy_factor = 1e10, 
                         max_dummy = 1e3)
   
-  aic_null$Site_Name[i] <- site
+  aic_null$site[i] <- site
   
-  aic_null$AIC[i] <- fit$aic 
+  aic_null$aic[i] <- fit$aic 
   
-  aic_null$BIC[i] <- fit$bic
+  aic_null$bic[i] <- fit$bic
 }
 
 aic_null$model <- "null"
+write.csv(aic_null, "aic_null_t15.csv")
 
 
-#Crown Class Model 
-aic_cc <- as.data.frame(matrix(ncol = 4, nrow = 48))
-colnames(aic_cc) <- c("Site_Name", "AIC", "BIC", "model")
+################################################################################
+############################## SIZE MODEL #######################################
 
-site_names <- site_names[!site_names %in% c("Dip", "Bird", "Flowerdale")]
+aic_size <- as.data.frame(matrix(ncol = 4, nrow = 48))
+colnames(aic_size) <- c("site", "aic", "bic", "model")
+
 
 for (i in seq_along(site_names)) {
+
   site <- site_names[i]
   
-  d <- data %>% filter(Site_Name == site) %>% 
-  mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia|^Syncarpia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
-    mutate(new_cc = paste(species, Crown_Class))%>% 
-    mutate(new_cc = if_else(new_cc == "Eucalyptus Emergent", "Eucalyptus Dominant", new_cc)) %>% 
-    mutate(new_cc = if_else(new_cc %in% c("Eucalyptus Co-dominant", "Eucalyptus Dominant"), "Eucalyptus Co/dominant", new_cc)) %>% 
-    mutate(new_cc = if_else(new_cc %in% c("Non-euc Co-dominant", "Non-euc Dominant"), "Non-euc Co/dominant", new_cc))
+  d <- data %>% filter(Site_Name == site)
   
-  d <- d %>%  #thresholds for groups 
-    group_by(new_cc) %>% 
+  d <- d %>% 
+    filter(!is.na(Diameter)) %>% 
+    mutate(size = if_else(Diameter < (mean(Diameter) + 3.5), "small", "large")) %>% 
+    group_by(size) %>% 
     mutate(observation_count = n()) %>% 
-    filter(!observation_count < 8)
+    ungroup() %>% 
+    filter(!observation_count < 10) 
   
-  
-  counts <- d %>% count(new_cc)
-  print(counts) # print counts to see 
   
   d <- d %>%
     group_by(Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
@@ -102,15 +117,17 @@ for (i in seq_along(site_names)) {
     ungroup() 
   
   
-  configuration<- Configuration(d$x_jitter, d$y_jitter, types = d$new_cc) #make config 
+  configuration <- Configuration(d$x_jitter, d$y_jitter, types = d$size) #make config 
   
   # Set parameters
   window <- ppjsdm::Rectangle_window(c(0, 100), c(0,100))
   nspecies <- length(levels(configuration$types))
+  short_range <- matrix(10, nspecies, nspecies)
+  model <- "exponential"
   
   fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
                        window = window,
-                       short_range = matrix(8, nspecies, nspecies), 
+                       short_range = short_range, 
                        model = "exponential", 
                        saturation = 10, 
                        nthreads = 4, 
@@ -118,270 +135,298 @@ for (i in seq_along(site_names)) {
                        dummy_distribution = "stratified",
                        min_dummy = 1, dummy_factor = 1e10, 
                        max_dummy = 1e3)
-  aic_cc$Site_Name[i] <- site
-  
-  aic_cc$AIC[i] <- fit$aic 
-  
-  aic_cc$BIC[i] <- fit$bic
+
+aic_size$site[i] <- site
+
+aic_size$aic[i] <- fit$aic 
+
+aic_size$bic[i] <- fit$bic
 }
 
-aic_cc$model <- "cc"
+aic_size$model <- "size"
+write.csv(aic_size, "aic_size_t15.csv")
 
+####################################################################################
+################################ SPECIES MODEL ####################################
 
+aic_sp <- as.data.frame(matrix(ncol = 4, nrow = 48))
+colnames(aic_sp) <- c("site", "aic", "bic", "model")
 
-#Size Model 
-aic_di <- as.data.frame(matrix(ncol = 4, nrow = 48))
-colnames(aic_di) <- c("Site_Name", "AIC", "BIC", "model")
-
-site_names <- unique(data$Site_Name)
-
-data <- data %>% 
-  mutate(size = if_else(Diameter < 50, "small", "large")) %>% 
-  mutate(group = paste(size, sep = " ", Genus_Species))
 
 for (i in seq_along(site_names)) {
+  
   site <- site_names[i]
   
-d <- data %>% filter(Site_Name == site)
+  d <- data %>% filter(Site_Name == site)
+  
+  
+  d <- d %>% 
+    group_by(Genus_Species) %>% 
+    mutate(observation_count = n()) %>% 
+    ungroup() %>% 
+    mutate(group = if_else(observation_count < 15, "Misc", Genus_Species)) %>% 
+    group_by(group) %>% 
+    mutate(obs = n()) %>% 
+    ungroup() %>% 
+    filter(! obs < 15)
+  
+  
+  d <- d %>%
+    group_by(Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
+    mutate(
+      is_duplicated = n() > 1, #create column of TRUE/FALSE 
+      #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
+      x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
+      y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
+    ) %>%
+    ungroup() 
+  
+  
+  configuration<- Configuration(d$x_jitter, d$y_jitter, types = d$group) #make config 
+  
+  # Set parameters
+  window <- ppjsdm::Rectangle_window(c(0, 100), c(0,100))
+  nspecies <- length(levels(configuration$types))
+  short_range <- matrix(10, nspecies, nspecies)
+  model <- "exponential"
+  
+  fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
+                       window = window,
+                       short_range = short_range, 
+                       model = "exponential", 
+                       saturation = 10, 
+                       nthreads = 4, 
+                       fitting_package = "glmnet",
+                       dummy_distribution = "stratified",
+                       min_dummy = 1, dummy_factor = 1e10, 
+                       max_dummy = 1e3)
+  
 
-d <- d %>% 
-  mutate(species = if_else(!str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia|^Syncarpia")), "Non-euc", "Eucalypt")) %>% 
-  mutate(new_group = paste(size, sep = " ", species)) %>% 
-  group_by(new_group) %>% 
-  mutate(observation_count = n()) %>% 
-  ungroup() %>% 
-  filter(!observation_count < 10) 
+  aic_sp$site[i] <- site
+  
+  aic_sp$aic[i] <- fit$aic 
+  
+  aic_sp$bic[i] <- fit$bic
+  }
 
-counts <- d %>% count(new_group)
-print(counts) # print counts to see 
+aic_sp$model <- "species"
+write.csv(aic_sp, "aic_species_t15.csv")
 
-d <- d %>%
-  group_by(Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
+
+#################################################################################
+############################### FG MODEL ########################################
+
+aic_fg <- as.data.frame(matrix(ncol = 4, nrow = 48))
+colnames(aic_fg) <- c("site", "aic", "bic", "model")
+
+for(i in seq_along(site_names)){
+  
+  site <- site_names[i]
+  
+  
+  df <- data1 %>%
+    filter(Site_Name == site)
+  
+  
+  #jitter coordinates
+  df <- df %>%
+    mutate(
+      is_duplicated = n() > 1, #create column of TRUE/FALSE 
+      #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
+      x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
+      y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
+    ) 
+  
+  
+  #make config
+  configuration <- ppjsdm::Configuration(df$x_jitter,
+                                         df$y_jitter, 
+                                         types = df$Class)
+  
+  #set parameters 
+  window <- ppjsdm::Rectangle_window(x_range = c(0, 100), 
+                                     y_range = c(0, 100))
+  
+  nspecies <- length(levels(configuration$types))
+  
+  set.seed(1030)  
+  #fit model 
+  fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
+                       window = window,
+                       short_range = matrix(10, nspecies, nspecies), 
+                       model = "exponential",
+                       saturation = 10, 
+                       nthreads = 4, 
+                       use_regularization = FALSE, 
+                       fitting_package = "glmnet",
+                       dummy_distribution = "stratified",
+                       min_dummy = 1, dummy_factor = 1e10, 
+                       max_dummy = 1e3)
+  
+  
+  aic_fg$site[i] <- site
+  
+  aic_fg$aic[i] <- fit$aic 
+  
+  aic_fg$bic[i] <- fit$bic
+}
+
+aic_fg$model <- "fg"
+write.csv(aic_fg, "aic_fg_t15.csv")
+
+
+###################################################################################
+########################## SPECIES X SIZE MODEL ###################################
+
+aic_sp_size <- as.data.frame(matrix(ncol = 4, nrow = 48))
+colnames(aic_sp_size) <- c("site", "aic", "bic", "model")
+
+
+for (i in seq_along(site_names)) {
+  
+  site <- site_names[i]
+  
+  df <- data %>%
+    filter(Site_Name == site)
+  
+  
+  #jitter coordinates
+  df <- df %>%
+    mutate(
+      is_duplicated = n() > 1, #create column of TRUE/FALSE 
+      #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
+      x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
+      y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
+    ) 
+  
+  
+  d <- df %>% 
+    filter(!Genus_Species == "Unidentified tree") %>% 
+    group_by(Genus_Species) %>% 
+    mutate(median_diameter = ceiling(median(Diameter, na.rm = TRUE)) + 3.5)  %>% 
+    mutate(size_class = case_when(
+      Diameter < median_diameter ~ "small", 
+      Diameter >= median_diameter ~ "large")) %>% 
+    ungroup() %>% 
+    mutate(new_group = paste0(Genus_Species, sep = " ", size_class)) %>% 
+    group_by(new_group) %>% 
+    mutate(observation_count = n()) %>% 
+    ungroup() %>%
+    mutate(size_class2 = if_else(observation_count < 15, 
+                                 "Misc", 
+                                 new_group)) %>% 
+    group_by(size_class2) %>% 
+    mutate(obs = n()) %>% 
+    ungroup() %>% 
+    filter(!(obs < 15)) 
+  
+  
+  
+  #make config
+  configuration <- ppjsdm::Configuration(d$x_jitter, d$y_jitter, types = d$size_class2)
+  
+  
+  #set parameters 
+  window <- ppjsdm::Rectangle_window(x_range = c(0, 100), 
+                                     y_range = c(0, 100))
+  
+  nspecies <- length(levels(configuration$types))
+  
+  set.seed(1030)  
+  #fit model 
+  fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
+                       window = window,
+                       short_range = matrix(10, nspecies, nspecies), 
+                       model = "exponential",
+                       saturation = 10, 
+                       nthreads = 4, 
+                       use_regularization = FALSE, 
+                       fitting_package = "glmnet",
+                       dummy_distribution = "stratified",
+                       min_dummy = 1, dummy_factor = 1e10, 
+                       max_dummy = 1e3)
+  aic_sp_size$site[i] <- site
+  
+  aic_sp_size$aic[i] <- fit$aic 
+  
+  aic_sp_size$bic[i] <- fit$bic
+}
+
+aic_sp_size$model <- "sp_size"
+write.csv(aic_sp_size, "aic_sp_size_t15.csv")
+
+##################################################################################
+################################### FG X SIZE MODEL #############################
+
+aic_fg_size <- as.data.frame(matrix(ncol = 4, nrow = 48))
+colnames(aic_fg_size) <- c("site", "aic", "bic", "model")
+
+
+for(i in seq_along(site_names)){
+  
+  site <- site_names[i]
+
+df <- data1 %>%
+  filter(Site_Name == site)
+
+
+#jitter coordinates
+df <- df %>%
   mutate(
     is_duplicated = n() > 1, #create column of TRUE/FALSE 
     #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
     x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
     y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
-  ) %>%
-  ungroup() 
+  ) 
 
 
-configuration<- Configuration(d$x_jitter, d$y_jitter, types = d$new_group) #make config 
+#make groups of fg x size  
+d <- df %>%
+  group_by(Class) %>% 
+  mutate(median_diameter = ceiling(median(Diameter, na.rm = TRUE)) + 3.5)  %>% 
+  mutate(size = case_when(
+    Diameter < median_diameter ~ "small", 
+    Diameter >= median_diameter ~ "large")) %>% 
+  ungroup() %>% 
+  mutate(new_group = paste0(Class, sep = " ", size)) %>% 
+  group_by(new_group) %>% 
+  mutate(observation_count = n()) %>% 
+  ungroup() %>% 
+  filter(!(observation_count < 15))
 
-# Set parameters
-window <- ppjsdm::Rectangle_window(c(0, 100), c(0,100))
+
+#make config
+configuration <- ppjsdm::Configuration(d$x_jitter,
+                                       d$y_jitter, 
+                                       types = d$new_group)
+
+#set parameters 
+window <- ppjsdm::Rectangle_window(x_range = c(0, 100), 
+                                   y_range = c(0, 100))
+
 nspecies <- length(levels(configuration$types))
-short_range <- matrix(8, nspecies, nspecies)
-model <- "exponential"
 
+set.seed(1030)  
+#fit model 
 fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
                      window = window,
-                     short_range = short_range, 
-                     model = "exponential", 
+                     short_range = matrix(10, nspecies, nspecies), 
+                     model = "exponential",
                      saturation = 10, 
                      nthreads = 4, 
+                     use_regularization = FALSE, 
                      fitting_package = "glmnet",
                      dummy_distribution = "stratified",
                      min_dummy = 1, dummy_factor = 1e10, 
                      max_dummy = 1e3)
 
-aic_di$Site_Name[i] <- site
+aic_fg_size$site[i] <- site
 
-aic_di$AIC[i] <- fit$aic 
+aic_fg_size$aic[i] <- fit$aic 
 
-aic_di$BIC[i] <- fit$bic
+aic_fg_size$bic[i] <- fit$bic
 }
 
-aic_di$model <- "diam"
+aic_fg_size$model <- "fg_size"
+write.csv(aic_fg_size, "aic_fg_size_t15.csv")
 
-
-
-
-#Species by Crown Class Model 
-aic_spcc <- as.data.frame(matrix(ncol = 4, nrow = 48))
-colnames(aic_spcc) <- c("Site_Name", "AIC", "BIC", "model")
-
-site_names <- site_names[!site_names %in% c("Dip", "Bird", "Flowerdale")]
-
-for (i in seq_along(site_names)) {
-  site <- site_names[i]
-  
-  d <- data %>% filter(Site_Name == site) %>% 
-      mutate(species = if_else(str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia||^Syncarpia"), negate = TRUE), "Non-euc", "Eucalyptus")) %>% 
-      mutate(new_cc = paste(Genus_Species, Crown_Class))%>% 
-      mutate(new_cc = if_else(new_cc %in% c("Eucalyptus Co-dominant", "Eucalyptus Dominant", "Eucalyptus Emergent"), "Eucalyptus Co/dominant", new_cc)) %>% 
-      mutate(new_cc = if_else(new_cc %in% c("Non-euc Co-dominant", "Non-euc Dominant"), "Non-euc Co/dominant", new_cc)) %>% 
-      mutate(group = paste(Genus_Species, str_extract(new_cc, "\\S+$")))
-
-  d <- d %>%  #thresholds for groups 
-    group_by(group) %>% 
-    mutate(observation_count = n()) %>% 
-    filter(!observation_count < 10) 
-  
-  
-  counts <- d %>% count(group)
-  print(counts) # print counts to see 
-  
-  d <- d %>%
-    group_by(Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
-    mutate(
-      is_duplicated = n() > 1, #create column of TRUE/FALSE 
-      #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
-      x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
-      y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
-    ) %>%
-    ungroup() 
-  
-  
-  configuration<- Configuration(d$x_jitter, d$y_jitter, types = d$new_cc) #make config 
-  
-  # Set parameters
-  window <- ppjsdm::Rectangle_window(c(0, 100), c(0,100))
-  nspecies <- length(levels(configuration$types))
-  short_range <- matrix(8, nspecies, nspecies)
-  model <- "exponential"
-  
-  fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
-                       window = window,
-                       short_range = short_range, 
-                       model = "exponential", 
-                       saturation = 10, 
-                       nthreads = 4, 
-                       fitting_package = "glmnet",
-                       dummy_distribution = "stratified",
-                       min_dummy = 1, dummy_factor = 1e10, 
-                       max_dummy = 1e3)
-
-  aic_spcc$Site_Name[i] <- site
-  
-  aic_spcc$AIC[i] <- fit$aic 
-  
-  aic_spcc$BIC[i] <- fit$bic
-  }
-
-aic_spcc$model <- "spcc"
-
-
-
-#Species by Size Model 
-aic_spdi <- as.data.frame(matrix(ncol = 4, nrow = 48))
-colnames(aic_spdi) <- c("Site_Name", "AIC", "BIC", "model")
-
-site_names <- unique(data$Site_Name)
-
-data <- data %>% 
-  mutate(size = if_else(Diameter < 50, "small", "large")) %>% 
-  mutate(group = paste(size, sep = " ", Genus_Species))
-
-for (i in seq_along(site_names)) {
-  site <- site_names[i]
-  d <- data %>% filter(Site_Name == site)
-  
-  d <- d %>% 
-    mutate(species = if_else(!str_starts(Genus_Species, regex("^Eucalyptus|^Corymbia|^Syncarpia")), "Non-euc", Genus_Species)) %>% 
-    mutate(new_group = paste(size, sep = " ", species)) %>% 
-    group_by(new_group) %>% 
-    mutate(observation_count = n()) %>% 
-    ungroup() %>% 
-    filter(!observation_count < 10) 
-  
-  counts <- d %>% count(new_group)
-  print(counts) # print counts to see 
-  
-  d <- d %>%
-    group_by(Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
-    mutate(
-      is_duplicated = n() > 1, #create column of TRUE/FALSE 
-      #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
-      x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
-      y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
-    ) %>%
-    ungroup() 
-  
-  
-  configuration<- Configuration(d$x_jitter, d$y_jitter, types = d$new_group) #make config 
-  
-  # Set parameters
-  window <- ppjsdm::Rectangle_window(c(0, 100), c(0,100))
-  nspecies <- length(levels(configuration$types))
-  short_range <- matrix(8, nspecies, nspecies)
-  model <- "exponential"
-  
-  fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
-                       window = window,
-                       short_range = short_range, 
-                       model = "exponential", 
-                       saturation = 10, 
-                       nthreads = 4, 
-                       fitting_package = "glmnet",
-                       dummy_distribution = "stratified",
-                       min_dummy = 1, dummy_factor = 1e10, 
-                       max_dummy = 1e3)
-  aic_spdi$Site_Name[i] <- site
-  
-  aic_spdi$AIC[i] <- fit$aic 
-  
-  aic_spdi$BIC[i] <- fit$bic
-}
-
-aic_spdi$model <- "spdiam"
-
-
-################################################################################
-##### Join all aic values together into a long dataframe 
-
-aic_mods <- rbind(aic_cc, aic_di, aic_spdi, aic_null, aic_spcc)
-aic_mods <- na.omit(aic_mods)
-aic_mods %>% count(model) #everything looks correct 
-aic_mods %>% count(Site_Name) 
-
-#save out 
-write.csv(aic_mods, "aic_mods1.csv")
-
-#Add region 
-aic_mods <- aic_mods %>% 
-mutate(region = Site_Name) %>% 
-  mutate(region = if_else(region %in% c("Carey", "Dombakup", "Warren", "Dawson", "Giants", "Sutton", "Frankland", "Clare", "Collins"), 
-                          "WA", region)) %>% 
-  mutate(region = if_else(region %in% c("ANU101", "ANU363", "ANU589", "Ada Tree", "HardyCreek", "Weeaproinah", "Turtons", "Lardner"), 
-                          "SE_VIC", region)) %>% 
-  mutate(region = if_else(region %in% c("Newline", "WaratahMix", "WogWay", "Goodenia", "Candelo"), 
-                          "SE_NSW", region)) %>% 
-  mutate(region = if_else(region %in% c("MinesRd", "A-Tree", "BirdTree", "BlackBull", "Lorne", "Tinebank", "Bruxner", "Osullivans"), 
-                          "N_NSW", region)) %>% 
-  mutate(region = if_else(region %in% c("Baldy", "Koombooloomba", "Lamb Range", "Herberton"), 
-                          "QLD", region)) %>% 
-  mutate(region = if_else(region %in% c("BenRidge", "Caveside", "Mackenzie", "MtField", "MtMaurice", "NorthStyx"), 
-                          "d_TAS", region)) %>% 
-  mutate(region = if_else(region %in% c("BondTier", "BlackRiver", "Weld", "Weld", "MtField", "ZigZag", "Supersite", "Bird", "Dip", "Flowerdale"), 
-                          "o_TAS", region)) 
-
-
-
-### Make a quick plot 
-aic <- ggplot(data = aic_mods, 
-       aes(x = model, 
-           y = AIC)) + 
-  #geom_line(aes(group = region)) + 
-  geom_boxplot() + 
-  geom_point(aes(colour = Site_Name)) + 
-  theme_bw() + 
-  ylab("") + 
-  ggtitle("AIC") + 
-  ylim(c( -18400, 15))
-
-bic <- ggplot(data = aic_mods, 
-              aes(x = model, 
-                  y = BIC)) + 
-  #geom_line(aes(group = region)) + 
-  geom_boxplot() +
-  geom_point(aes(colour = Site_Name)) + 
-  theme_bw() +
-  ylab("") + 
-  rremove("y.text") + 
-  rremove("y.ticks") +
-  ggtitle("BIC") + 
-  ylim(c( -18400, 15))
-
-
-aic + bic + plot_layout(guides = "collect")

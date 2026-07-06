@@ -9,6 +9,9 @@ library(ggpubr)
 
 # Using df_all_3_5
 df <- df_add3_5_t15
+
+#or use updated df with misc and t = 12
+df <- read.csv("sp_size_df_t12_withmisc_clean.csv")
 # 
 # species_class <- species_class %>% select(Species, edge_case)
 # species_class <- species_class %>% rename(species_to = species_from)
@@ -36,17 +39,17 @@ within <- within %>%
   mutate(fill_col = ifelse(sig == 1, as.character(georegion), NA))
 
 
-within <- within %>%
-  mutate(fill_col = ifelse(sig == 1, as.character(georegion), NA)) %>%
-  mutate(group = paste0(cc_from, ".", class_from,  "_", cc_to, ".", class_to)) %>%
-  mutate(group = case_when(
-    group %in% c("Canopy.large_Canopy.small", "Canopy.small_Canopy.large") ~ "Canopy.large_Canopy.small",
-    group %in% c("Canopy.large_Subcanopy.large", "Subcanopy.large_Canopy.large") ~ "Canopy.large_Subcanopy.large",
-    group %in% c("Canopy.large_Subcanopy.small", "Subcanopy.small_Canopy.large") ~  "Canopy.large_Subcanopy.small",
-    group %in% c("Canopy.small_Subcanopy.large", "Subcanopy.large_Canopy.small") ~ "Canopy.small_Subcanopy.large",
-    group %in% c("Canopy.small_Subcanopy.small", "Subcanopy.small_Canopy.small") ~ "Canopy.small_Subcanopy.small",
-    group %in% c("Subcanopy.large_Subcanopy.small", "Subcanopy.small_Subcanopy.large") ~ "Subcanopy.large_Subcanopy.small",
-    TRUE ~ group))
+# within <- within %>%
+#   mutate(fill_col = ifelse(sig == 1, as.character(georegion), NA)) %>%
+#   mutate(group = paste0(cc_from, ".", class_from,  "_", cc_to, ".", class_to)) %>%
+#   mutate(group = case_when(
+#     group %in% c("Canopy.large_Canopy.small", "Canopy.small_Canopy.large") ~ "Canopy.large_Canopy.small",
+#     group %in% c("Canopy.large_Subcanopy.large", "Subcanopy.large_Canopy.large") ~ "Canopy.large_Subcanopy.large",
+#     group %in% c("Canopy.large_Subcanopy.small", "Subcanopy.small_Canopy.large") ~  "Canopy.large_Subcanopy.small",
+#     group %in% c("Canopy.small_Subcanopy.large", "Subcanopy.large_Canopy.small") ~ "Canopy.small_Subcanopy.large",
+#     group %in% c("Canopy.small_Subcanopy.small", "Subcanopy.small_Canopy.small") ~ "Canopy.small_Subcanopy.small",
+#     group %in% c("Subcanopy.large_Subcanopy.small", "Subcanopy.small_Subcanopy.large") ~ "Subcanopy.large_Subcanopy.small",
+#     TRUE ~ group))
 
 
 ###### Overall within-sp interactions 
@@ -77,7 +80,7 @@ withinfig <- within %>%
              shape = 19, 
              size = 1.75, 
              alpha = 0.5) +
-  scale_colour_manual(values = c("#35B779FF", "#39568CFF"), 
+  scale_colour_manual(values = c("#35B779FF", "#39568CFF", "black"), 
                       breaks = c("Subcanopy", "Canopy"),
                       name = "Strata") + 
   geom_text(aes(label = ifelse(alpha2 == -2.33, "-3.3", "")), 
@@ -151,7 +154,7 @@ withinfig <- within %>%
             vjust = -6.5, 
             size = 2.25) +
   geom_point(data = within_wmean, 
-             aes(x = `w.mean`, y = class_int, groups = fct_rev(group_1)),
+             aes(x = mean, y = class_int, groups = fct_rev(group_1)),
              position = position_dodge(0.75), 
              size = 2.75) +
   theme_bw() + # Theme

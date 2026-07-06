@@ -13,12 +13,12 @@ library(ggplot2)
 
 
 # Load cleaned data 
-data_c <- read.csv("data/data_cleaned.csv")
+data <- read.csv("data/data_cleaned.csv")
 
 ### Null model - all individuals in the same group 'default', i.e. no species or crown classes
 
 #get rid of duplicate points first 
-data_c <- data_c %>%
+data_c <- data %>%
   group_by(Site_Name, Ausplot_X, Ausplot_Y) %>% #group by coordinate columns
   mutate(
     is_duplicated = n() > 1, #create column of TRUE/FALSE 

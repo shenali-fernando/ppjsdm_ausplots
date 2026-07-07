@@ -13,36 +13,27 @@ df <- read.csv("scripts/model_specifications/species_diameter/df_add3_5_t15.csv"
 #or 
 df <- read.csv("scripts/model_specifications/species_diameter/df_add3.5_t12.csv")
 
-#or use updated df with misc and t = 12
-df <- read.csv("sp_size_df_t12_withmisc_clean.csv")
+#or updated sp_size model 
+sp_size <- read.csv("scripts/model_specifications/species_diameter/sp_size_df_t15_misc_updated.csv")
 
 #for intraspecific 
 
-intra <- df %>% 
+intra <- sp_size %>% 
   filter(species_to == species_from)
 
-#rename class_ints  
+#rename size_ints  
 intra <- intra %>% 
-  mutate(class_int = case_when(class_int == "small_small" ~ "Small ↔ Small", 
-                               class_int == "small_large" ~ "Small ↔ Large", 
-                               class_int == "large_large" ~ "Large ↔ Large")) %>% 
-  mutate(class_int = as.factor(class_int)) %>% 
-  mutate(class_int = fct_relevel(class_int, "Small ↔ Small", 
+  mutate(size_int = case_when(size_int == "small_small" ~ "Small ↔ Small", 
+                               size_int == "small_large" ~ "Small ↔ Large", 
+                               size_int == "large_large" ~ "Large ↔ Large")) %>% 
+  mutate(size_int = as.factor(size_int)) %>% 
+  mutate(size_int = fct_relevel(size_int, "Small ↔ Small", 
                               "Small ↔ Large", 
                               "Large ↔ Large"
                               )) %>% 
-  mutate(cc_from = as.factor(cc_from)) %>% 
-  mutate(cc_from = fct_relevel(cc_from, "Subcanopy",  "Canopy",))
-  
+  mutate(cc_from = as.factor(class_from)) %>% 
+  mutate(cc_from = fct_relevel(class_from, "Subcanopy",  "Canopy",))
 
-intra <- intra %>% 
-  rename(size_int = class_int)
-
-intra <- intra %>% 
-  rename(fg_class = cc_from)
-
-intra <- intra %>% 
-  rename(group_names = cc_int)
 
 ##remove misc groups cos it dont mean anything without an fg (this is what we interested in)
 intra <- intra %>% 
@@ -58,7 +49,7 @@ hist(intra$alpha)
 
 #use package glmtmb
 mod1 <- glmmTMB(alpha ~
-                1 + size_int + fg_class + size_int:fg_class + (1|species_from) + (1|site), 
+                1 + size_int + class_from + size_int:class_from + (1|species_from) + (1|site), 
                 data = intra)
 
 s <- summary(mod1)
@@ -127,13 +118,13 @@ p1
 
 ### visualisation 
 
-ggeffect(mod1, terms = c("size_int", "fg_class")) %>% 
+ggeffect(mod1, terms = c("size_int", "class_from")) %>% 
   plot(show_data = TRUE, jitter = TRUE)
 
 
 
 
-ggpredict(mod1, terms = c("size_int", "fg_class")) %>% 
+ggpredict(mod1, terms = c("size_int", "class_from")) %>% 
   plot(show_data = TRUE, 
        jitter = TRUE, 
        dot_size = 3, line_size = 1.5,
@@ -158,12 +149,12 @@ ggpredict(mod1, terms = c("size_int", "fg_class")) %>%
   theme(panel.grid.minor.y = element_blank(), 
         axis.text = element_text(size = 10))
 
-ggsave("fig2.jpg", width = 20, height = 14, units = "cm", dpi = 300)
+ggsave("linearmod_sp_size_updated.jpg", width = 20, height = 14, units = "cm", dpi = 300)
 
 ##take these predictions and put into a df 
-pred <- ggpredict(mod1, terms = c("size_int", "fg_class"))
+pred <- ggpredict(mod1, terms = c("size_int", "class_from"))
 intra_pred_df <-as.data.frame(pred)
-write.csv(intra_pred_df,"intra_pred_df.csv")
+write.csv(intra_pred_df,"intra_pred_df_updatedmod.csv")
 #table in supplement?? visualise 
 
 

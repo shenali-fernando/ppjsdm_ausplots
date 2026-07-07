@@ -6,14 +6,11 @@ library(ggplot2)
 library(ggeffects)
 library(emmeans)
 library(tidyr)
+library(DHARMa) 
 
-#load in dataframe of coef estimates v 
-df <- read.csv("scripts/model_specifications/species_diameter/df_add3_5_t15.csv")
 
-#or 
-df <- read.csv("scripts/model_specifications/species_diameter/df_add3.5_t12.csv")
 
-#or updated sp_size model 
+#updated sp_size model 
 sp_size <- read.csv("scripts/model_specifications/species_diameter/sp_size_df_t15_misc_updated.csv")
 
 #for intraspecific 
@@ -69,8 +66,6 @@ plot(mod,
 
 
 #more diagnositics (perhaps better)
-library(DHARMa) 
-
 #tests are more sensitive than the actual model
 testDispersion(mod1) #tests if the simulated dispersion is equal to the observed dispersion
 r <- simulateResiduals(mod1, n= 1000, plot = TRUE)
@@ -158,13 +153,79 @@ write.csv(intra_pred_df,"intra_pred_df_updatedmod.csv")
 #table in supplement?? visualise 
 
 
+################################################################################
+
+### also want to do a similar thing for the fg + size model 
+
+fg_size <- read.csv("scripts/model_specifications/fg_size/fg_size_df_t15_updated.csv")
+
+#get within as well and clean
+intra_fg <- fg_size %>% 
+  filter(class_to == class_from)
+
+#rename size_ints  
+intra_fg <- intra_fg %>% 
+  mutate(size_int = case_when(size_int == "small small" ~ "Small ↔ Small", 
+                              size_int == "small large" ~ "Small ↔ Large", 
+                              size_int == "large large" ~ "Large ↔ Large")) %>% 
+  mutate(size_int = as.factor(size_int)) %>% 
+  mutate(size_int = fct_relevel(size_int, "Small ↔ Small", 
+                                "Small ↔ Large", 
+                                "Large ↔ Large"
+  )) %>% 
+  mutate(class_from = as.factor(class_from)) %>% 
+  mutate(class_from = fct_relevel(class_from, "Subcanopy",  "Canopy",))
 
 
 
+#make linear mod
+lm_fg <- glmmTMB(alpha ~
+                  1 + size_int + class_from + size_int:class_from + (1|site), 
+                data = intra_fg)
+
+sum <- summary(lm_fg)
 
 
+### Model diagnostics 
+testDispersion(lm_fg) #tests if the simulated dispersion is equal to the observed dispersion
+r <- simulateResiduals(lm_fg, n= 1000, plot = TRUE)
 
-#for interspecific 
+
+#ggpredict and visualise 
+ggpredict(lm_fg, terms = c("size_int", "class_from")) %>% 
+  plot(show_data = TRUE, 
+       jitter = TRUE, 
+       dot_size = 3, line_size = 1.5,
+       alpha =1,
+       dot_alpha = 0.1, 
+       n_rows = 1, 
+       use_theme = FALSE) +
+  geom_hline(yintercept = 0, linetype = "dotted") +
+  scale_colour_manual(
+    values = c( "#39568CFF", "#35B779FF"),
+    breaks = c("Canopy", "Subcanopy"),
+    name = "Functional Group") +
+  scale_fill_manual(
+    values = c( "#39568CFF", "#35B779FF"),
+    breaks = c("Canopy", "Subcanopy"),
+    name = "Functional Group") + 
+  xlab("") +
+  ylab("Alpha coefficient") + 
+  coord_flip() +
+  ggtitle("") + 
+  theme_bw() + 
+  theme(panel.grid.minor.y = element_blank(), 
+        axis.text = element_text(size = 10))
+
+
+##take these predictions and put into a df 
+pred <- ggpredict(lm_fg, terms = c("size_int", "class_from"))
+intra_pred_df <-as.data.frame(pred)
+write.csv(intra_pred_df,"lm_fg_size_intra.csv")
+
+
+##############################################################################
+#for interspecific and back to the species + size model 
 
 inter <- df %>% 
   filter( ! species_to == species_from)

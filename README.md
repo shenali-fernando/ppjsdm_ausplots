@@ -37,4 +37,4 @@ This repo contains the analysis on the TERN AusPlots data using the saturated pa
 
     -   /analysis: Scripts on the analysis of the interaction coefficients outputted by the model including computing weighted means for interacting groups, correlation of interactions to site covariates, etc
 
--   /outputs: Outputs from model specifications, mostly from species_diameter specification
+-   /outputs: Outputs from model specifications, subsequent analysis, and testing

@@ -7,6 +7,8 @@ library(ggpubr)
 
 #Load in dfs 
 sp_size <- read.csv("scripts/model_specifications/species_diameter/df_add3_5_t15.csv")
+#or updated sp_size model 
+sp_size <- read.csv("scripts/model_specifications/species_diameter/sp_size_df_t15_misc_updated.csv")
 
 fg_size <- read.csv("scripts/model_specifications/fg_size/fg_size_df_t15_updated.csv")
 
@@ -18,7 +20,7 @@ fg_size <- read.csv("scripts/model_specifications/fg_size/fg_size_df_t15_updated
 # for each, and we can see where these line up on the one-to-one line 
 
 #Read in the linear model post-hoc intraspecific coefficients 
-intra_sp_preds <- read.csv("scripts/analysis/intra_pred_df.csv")
+intra_sp_preds <- read.csv("intra_pred_df_updatedmod.csv")
 
 #Get the medians for the within-sclass interactions for the a-priori (fg_size) model
 #first clean
@@ -84,7 +86,11 @@ ggplot(intra_sum_df_wide,
   ylab("a priori (fg+size model)") + 
   xlab("post-hoc (linear model of species+size model)") + 
   xlim(c(-0.6, 0.3)) + 
-  ylim(c(-0.6, 0.3))
+  ylim(c(-0.6, 0.3)) + 
+  labs(
+    color = "FG",
+    shape = "Size Interaction"
+  )
 
 
 ## okay, so there actually are some major differences in how the two models are working
@@ -114,6 +120,11 @@ ggplot(intra_sum_df_wide,
 fg_size$model <- "fg_size"
 sp_size$model <- "sp_size"
 
+# get rid of misc in sp_size 
+sp_size <- sp_size %>% 
+  filter(! from %in% c("Misc_large", "Misc_small")) %>% 
+  filter(! to %in% c("Misc_large", "Misc_small"))
+
 #bind 
 full_fg_sp <- bind_rows(fg_size, sp_size)
 
@@ -121,7 +132,7 @@ full_fg_sp <- bind_rows(fg_size, sp_size)
 full_fg_sp <- full_fg_sp %>% 
   mutate(size_int = case_when(
     size_int %in% c("small small", "small_small") ~ "Small ↔ Small", 
-    size_int %in% c("small large", "large_small") ~ "Small ↔ Large", 
+    size_int %in% c("small large", "large_small", "small_large") ~ "Small ↔ Large", 
     size_int %in% c("large large", "large_large") ~ "Large ↔ Large", 
     TRUE ~ size_int))
 
@@ -133,7 +144,7 @@ full_fg_sp <- full_fg_sp %>%
                                 "Large ↔ Large")) %>% 
   mutate(model = case_when(model == "fg_size" ~ "FG + Size", 
                            model == "sp_size" ~ "Species + Size")) %>% 
-  mutate(model = as.factor(model))
+  mutate(model = as.factor(model)) 
 
 
 ###########INTRA

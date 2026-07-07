@@ -39,9 +39,6 @@ fg_size <- read.csv("scripts/model_specifications/fg_size/fg_size_df_t15_updated
 within <- fg_size %>% 
   filter(class_from == class_to)    
 
-within <- within %>% 
-  mutate(fill_col = ifelse(sig == 1, as.character(georegion), NA))
-
 #add sig 
 within <- within %>% 
   mutate(sig = ifelse(lo > 0 | hi < 0, 1 , NA))
@@ -118,6 +115,110 @@ withinfig
 ggsave("within_fg_si.png", withinfig, 
        width = 11, height = 6.75)
 
+
+####### make another version but showing significance of points 
+within %>% 
+  mutate(size_int = case_when(
+    size_int == "small small" ~ "Small ↔ Small", 
+    size_int == "small large" ~ "Small ↔ Large", 
+    size_int == "large large" ~ "Large ↔ Large")) %>% 
+  mutate(size_int = as.factor(size_int)) %>% 
+  mutate(size_int = fct_relevel(size_int, 
+                                "Small ↔ Small",
+                                "Small ↔ Large", 
+                                "Large ↔ Large")) %>% 
+  mutate(class_from = as.factor(class_from)) %>% 
+  mutate(class_from = fct_relevel(class_from, "Subcanopy", "Canopy")) %>% 
+  mutate(fill_col = ifelse(sig == 1, as.character(class_from), NA)) %>% 
+  ggplot(aes(x = alpha, y = size_int, groups = class_from)) + 
+  geom_vline(xintercept = 0, colour = "red") +
+  geom_violin(colour = "black", 
+              scale = "width", 
+              width = 0.7,
+              fill = NA,
+              position = position_dodge(0.75)) +
+  geom_point(aes(colour = class_from, 
+                 fill = fill_col, 
+                 group = class_from), 
+             position = position_jitterdodge(seed = 21, 
+                                             jitter.width = 0.3,
+                                             dodge.width = 0.75), 
+             shape= 21, 
+             size = 1.75, 
+             stroke = 1.5, 
+             alpha = 0.7) +
+  scale_colour_manual(values = c("Canopy" = "#39568CFF",
+                               "Subcanopy" = "#35B779FF")) + 
+  scale_fill_manual(values = c("Canopy" = "#39568CFF",
+                              "Subcanopy" = "#35B779FF"), 
+                    na.value = "white",  
+                    na.translate = FALSE, 
+                    name = "Functional Group") + 
+  theme_bw() + 
+  theme(text = element_text(size = 14), 
+        legend.text=element_text(size= 12), 
+        axis.title.x = element_text(size = 14, 
+                                    margin = margin(8, 0, 0, 0)), 
+        axis.text.y = element_text(size = 14), 
+        axis.text.x = element_text(size = 13)) + 
+  guides(colour = guide_legend(override.aes = list(size=3.5))) + 
+  labs(x = "Interaction Coefficient", y = "") +
+  ylab("")  
+
+
+ggsave("within_fg_si_significance.png",  
+       width = 11, height = 6.75)
+
+
+## Make a similar thing for inter-group 
+## Within-species interactions 
+between <- fg_size %>% 
+  filter(! class_from == class_to)    
+
+#add sig 
+between <- between %>% 
+  mutate(sig = ifelse(lo > 0 | hi < 0, 1 , NA))
+
+
+between %>% 
+  mutate(int = case_when(int == "Subcanopy small_Canopy small" ~ "Subcanopy small ↔ Canopy small", 
+                         int == "Subcanopy small_Canopy large" ~ "Subcanopy small ↔ Canopy large", 
+                         int == "Subcanopy large_Canopy small" ~ "Subcanopy large ↔ Canopy small", 
+                         int == "Subcanopy large_Canopy large" ~ "Subcanopy large ↔ Canopy large")) %>% 
+  ggplot(aes(x = alpha,
+             y = int)) + 
+  geom_vline(xintercept = 0, colour = "red") +
+  geom_violin(colour = "black", 
+              scale = "width", 
+              width = 0.7,
+              fill = NA,
+              position = position_dodge(0.75)) +
+  geom_point(aes(fill = as.character(sig), 
+                 group = int), 
+             position = position_jitterdodge(seed = 21, 
+                                             jitter.width = 0.3,
+                                             dodge.width = 0.75), 
+             shape= 21, 
+             size = 1.75, 
+             stroke = 1.5, 
+             alpha = 0.7) +
+  scale_fill_manual(values = c("black"), 
+                    na.value = "white", 
+                    name = "Significant") + 
+  theme_bw() + 
+  theme(text = element_text(size = 14), 
+        legend.text=element_text(size= 12), 
+        axis.title.x = element_text(size = 14, 
+                                    margin = margin(8, 0, 0, 0)), 
+        axis.text.y = element_text(size = 14), 
+        axis.text.x = element_text(size = 13)) + 
+  guides(colour = guide_legend(override.aes = list(size=3.5))) + 
+  labs(x = "Interaction Coefficient", y = "") +
+  ylab("")  
+
+
+ggsave("bw_fg_si_significance.png", 
+       width = 11, height = 5.75)
 
 
 #weighted mean by se or cis = ave ints

@@ -503,24 +503,6 @@ df_traits  <- df_height %>%
 
 
 
-# # to use ggmap need a google API key 
-# register_google(key = "AIzaSyAI6lTAvGDB_ejEBsbCFlmmCMwjXY28jG4")
-# now requires to put in billing details to use 
-# map <- get_googlemap("Australia", zoom = 4, maptype = "terrain")
-# 
-# # Plot it
-# ggmap(map) + 
-#   theme_void() + 
-#   ggtitle("terrain") + 
-#   theme(
-#     plot.title = element_text(colour = "orange"), 
-#     panel.border = element_rect(colour = "grey", fill=NA, size=2)
-#   )
-
-
-
-
-
 #Tabulate species 
 dd <- data %>%  mutate(georegion = case_when(Site_Name %in% c("Weeaproinah", "Turtons", "Lardner") ~ "S_VIC", 
                                              Site_Name %in% c("ANU101", "ANU363", "ANU589", "Ada Tree", "HardyCreek") ~ "N_VIC", 

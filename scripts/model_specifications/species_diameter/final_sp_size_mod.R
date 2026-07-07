@@ -15,10 +15,10 @@ data <- read.csv("data/ausplots/data_cleaned.csv")
 sites <- unique(data$Site_Name)
 
 #take out sites with ci_range > 5
-sites <- sites[! sites %in% c("Bird", "BirdTree", "BlackRiver", "Bruxner", 
-                              "Caveside", "Flowerdale", "Lardner", "Lorne","Mackenzie",
+sites <- sites[! sites %in% c("Bird", "BlackRiver", "Caveside", "Flowerdale", 
+                              "Lardner", "Mackenzie",
                               "MtField", "NorthStyx", 
-                              "Tinebank", "WaratahMix", "Weld")]
+                               "WaratahMix", "Weld")]
 
 full_df <- data.frame(matrix(ncol = 9, nrow = 0))
 colnames(full_df) <- c("from", "to", "alpha", "lo", "hi", "lo_numerical",
@@ -30,7 +30,7 @@ for (i in sites){
   site_mod <- size_sites(site = i, #single site 
                          show_size_freq = FALSE,
                          config_only = FALSE, #if TRUE, returns config only and exits function
-                         threshold = 12, 
+                         threshold = 15, 
                          short_range = 10, 
                          short_model = "exponential")
   
@@ -44,7 +44,7 @@ for (i in sites){
 
 
 
-#Check unreasonable cis - 13/48 sites with one problem species each 
+#Check unreasonable cis - 10/48 sites with one problem species each 
 
 full_df <- full_df %>% 
   mutate(range_ci = hi - lo)
@@ -52,7 +52,7 @@ full_df <- full_df %>%
 a <- full_df %>% filter(range_ci > 5)
 a %>% count(site)
 
-threshold <- 12
+threshold <- 15
 ##############################################################################
 ## Bird, just Acacia melanoyxlon large 
 
@@ -132,82 +132,6 @@ at <- extra_df %>% filter(range_ci > 5)
 
 full_df <- rbind(full_df, extra_df)
 
-###############################################################################
-## BirdTree; needs threshold = 15
-df <- data %>%
-   filter(Site_Name == "BirdTree")
-
-df <- df %>%
-  mutate(
-    is_duplicated = n() > 1, #create column of TRUE/FALSE 
-    #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
-    x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
-    y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
-  ) 
-
-
-
-d <- df %>% 
-  filter(!Genus_Species == "Unidentified tree") %>% 
-  group_by(Genus_Species) %>% 
-  mutate(median_diameter = ceiling(median(Diameter, na.rm = TRUE)) + 3.5)  %>% 
-  mutate(size_class = case_when(
-    Diameter < median_diameter ~ "small", 
-    Diameter >= median_diameter ~ "large")) %>% 
-  ungroup() %>% 
-  mutate(species_size = paste0(Genus_Species, " ", size_class)) %>% 
-  group_by(species_size) %>% 
-  mutate(observation_count = n()) %>% 
-  ungroup() %>%
-  mutate(species_size2 = case_when(
-    observation_count < 15 & str_ends(species_size, "small") ~ "Misc_small",
-    observation_count < 15 & str_ends(species_size, "large") ~ "Misc_large",
-    TRUE ~ species_size)) %>% 
-  group_by(species_size2) %>% 
-  mutate(obs = n()) %>% 
-  ungroup() %>% 
-  filter(!(obs < threshold)) 
-
-#make config
-configuration <- ppjsdm::Configuration(d$x_jitter, d$y_jitter, types = d$species_size2)
-plot(configuration)
-
-d %>% count(species_size2)
-
-#set parameters 
-window <- ppjsdm::Rectangle_window(x_range = c(0, 100), 
-                                   y_range = c(0, 100))
-
-nspecies <- length(levels(configuration$types))
-
-
-#fit model 
-fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
-                     window = window,
-                     short_range = matrix(10, nspecies, nspecies), 
-                     model = "exponential",
-                     saturation = 10, 
-                     nthreads = 4, 
-                     use_regularization = FALSE, 
-                     fitting_package = "glmnet",
-                     dummy_distribution = "stratified",
-                     min_dummy = 1, dummy_factor = 1e10, 
-                     max_dummy = 1e3)
-
-
-sum <- summary(fit)
-extra_df <- make_sum_df(fits = list(fit), 
-                        summ = list(sum))
-
-extra_df <- extra_df %>% mutate(site = "BirdTree")
-
-extra_df <- extra_df %>% 
-  mutate(range_ci = hi - lo)
-
-at <- extra_df %>% filter(range_ci > 5)
-
-full_df <- rbind(full_df, extra_df)
-
 
 ############################################################################
 ## BlackRiver
@@ -245,7 +169,7 @@ d <- df %>%
   filter(!(obs < threshold)) 
 
 d <- d %>% 
-  mutate(species_size2 = ifelse(species_size2 %in% c("Acacia mucronata large", "Monotoca glauca large"), "Misc_large", species_size2))
+  mutate(species_size2 = ifelse(species_size2 == "Monotoca glauca large", "Misc_large", species_size2))
 
 #make config
 configuration <- ppjsdm::Configuration(d$x_jitter, d$y_jitter, types = d$species_size2)
@@ -290,163 +214,6 @@ full_df <- rbind(full_df, extra_df)
 
 
 #################################################################################
-##Lorne
-df <- data %>%
-  filter(Site_Name == "Lorne")
-
-df <- df %>%
-  mutate(
-    is_duplicated = n() > 1, #create column of TRUE/FALSE 
-    #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
-    x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
-    y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
-  ) 
-
-
-d <- df %>% 
-  filter(!Genus_Species == "Unidentified tree") %>% 
-  group_by(Genus_Species) %>% 
-  mutate(median_diameter = ceiling(median(Diameter, na.rm = TRUE)) + 3.5)  %>% 
-  mutate(size_class = case_when(
-    Diameter < median_diameter ~ "small", 
-    Diameter >= median_diameter ~ "large")) %>% 
-  ungroup() %>% 
-  mutate(species_size = paste0(Genus_Species, " ", size_class)) %>% 
-  group_by(species_size) %>% 
-  mutate(observation_count = n()) %>% 
-  ungroup() %>%
-  mutate(species_size2 = case_when(
-    observation_count < threshold & str_ends(species_size, "small") ~ "Misc_small",
-    observation_count < threshold & str_ends(species_size, "large") ~ "Misc_large",
-    TRUE ~ species_size)) %>% 
-  group_by(species_size2) %>% 
-  mutate(obs = n()) %>% 
-  ungroup() %>% 
-  filter(!(obs < 13)) 
-
-
-#make config
-configuration <- ppjsdm::Configuration(d$x_jitter, d$y_jitter, types = d$species_size2)
-plot(configuration)
-
-d %>% count(species_size2)
-
-#set parameters 
-window <- ppjsdm::Rectangle_window(x_range = c(0, 100), 
-                                   y_range = c(0, 100))
-
-nspecies <- length(levels(configuration$types))
-
-
-#fit model 
-fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
-                     window = window,
-                     short_range = matrix(10, nspecies, nspecies), 
-                     model = "exponential",
-                     saturation = 10, 
-                     nthreads = 4, 
-                     use_regularization = FALSE, 
-                     fitting_package = "glmnet",
-                     dummy_distribution = "stratified",
-                     min_dummy = 1, dummy_factor = 1e10, 
-                     max_dummy = 1e3)
-
-
-sum <- summary(fit)
-extra_df <- make_sum_df(fits = list(fit), 
-                        summ = list(sum))
-
-extra_df <- extra_df %>% mutate(site = "Lorne")
-
-extra_df <- extra_df %>% 
-  mutate(range_ci = hi - lo)
-
-at <- extra_df %>% filter(range_ci > 5)
-
-full_df <- rbind(full_df, extra_df)
-
-
-###################################################################################
-## Bruxner, 
-
-df <- data %>%
-  filter(Site_Name == "Bruxner")
-
-df <- df %>%
-  mutate(
-    is_duplicated = n() > 1, #create column of TRUE/FALSE 
-    #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
-    x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
-    y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
-  ) 
-
-
-d <- df %>% 
-  filter(!Genus_Species == "Unidentified tree") %>% 
-  group_by(Genus_Species) %>% 
-  mutate(median_diameter = ceiling(median(Diameter, na.rm = TRUE)) + 3.5)  %>% 
-  mutate(size_class = case_when(
-    Diameter < median_diameter ~ "small", 
-    Diameter >= median_diameter ~ "large")) %>% 
-  ungroup() %>% 
-  mutate(species_size = paste0(Genus_Species, " ", size_class)) %>% 
-  group_by(species_size) %>% 
-  mutate(observation_count = n()) %>% 
-  ungroup() %>%
-  mutate(species_size2 = case_when(
-    observation_count < threshold & str_ends(species_size, "small") ~ "Misc_small",
-    observation_count < threshold & str_ends(species_size, "large") ~ "Misc_large",
-    TRUE ~ species_size)) %>% 
-  group_by(species_size2) %>% 
-  mutate(obs = n()) %>% 
-  ungroup() %>% 
-  filter(!(obs < threshold)) 
-
-d <- d %>% 
-  mutate(species_size2 = ifelse(species_size2 == "Geissois benthamii large", "Misc_large", species_size2)) %>% 
-  mutate(species_size2 = ifelse(species_size2 == "Niemeyeria whitei small", "Misc_small", species_size2))
-
-#make config
-configuration <- ppjsdm::Configuration(d$x_jitter, d$y_jitter, types = d$species_size2)
-plot(configuration)
-
-d %>% count(species_size2)
-
-#set parameters 
-window <- ppjsdm::Rectangle_window(x_range = c(0, 100), 
-                                   y_range = c(0, 100))
-
-nspecies <- length(levels(configuration$types))
-
-
-#fit model 
-fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
-                     window = window,
-                     short_range = matrix(10, nspecies, nspecies), 
-                     model = "exponential",
-                     saturation = 10, 
-                     nthreads = 4, 
-                     use_regularization = FALSE, 
-                     fitting_package = "glmnet",
-                     dummy_distribution = "stratified",
-                     min_dummy = 1, dummy_factor = 1e10, 
-                     max_dummy = 1e3)
-
-
-sum <- summary(fit)
-extra_df <- make_sum_df(fits = list(fit), 
-                        summ = list(sum))
-
-extra_df <- extra_df %>% mutate(site = "Bruxner")
-
-extra_df <- extra_df %>% 
-  mutate(range_ci = hi - lo)
-
-at <- extra_df %>% filter(range_ci > 5)
-
-full_df <- rbind(full_df, extra_df)
-
-#################################################################################
 ## Caveside 
 
 df <- data %>%
@@ -483,10 +250,7 @@ d <- df %>%
   filter(!(obs < threshold)) 
 
 d <- d %>% 
-  mutate(species_size2 = ifelse(species_size2 == "Acacia dealbata small", "Misc_small", species_size2)) %>%
-  mutate(species_size2 = ifelse(species_size2 == "Olearia argophylla small", "Misc_small", species_size2)) %>% 
-  filter(! species_size2 == "Misc_large")
-
+  mutate(species_size2 = ifelse(species_size2 == "Olearia argophylla small", "Misc_small", species_size2))
 
 #make config
 configuration <- ppjsdm::Configuration(d$x_jitter, d$y_jitter, types = d$species_size2)
@@ -727,8 +491,7 @@ d <- df %>%
   filter(!(obs < threshold)) 
 
 d <- d %>% 
-  mutate(species_size2 = ifelse(species_size2 == "Acacia melanoxylon large", "Misc_large", species_size2)) %>%
-  filter(! species_size2 == "Misc_small")
+  filter(! species_size2 %in% c("Misc_small", "Acacia melanoxylon large"))
 
 
 #make config
@@ -931,86 +694,6 @@ at <- extra_df %>% filter(range_ci > 5)
 full_df <- rbind(full_df, extra_df)
 
 
-##################################################################################
-## Tinebank 
-
-df <- data %>%
-  filter(Site_Name == "Tinebank")
-
-df <- df %>%
-  mutate(
-    is_duplicated = n() > 1, #create column of TRUE/FALSE 
-    #new_column_name = if_else(condition, true, false): so condition=column name, if true=fill with, if false=fill with
-    x_jitter = if_else(is_duplicated, Ausplot_X + runif(n(), -0.025, 0.025), Ausplot_X), #create x_jitter column
-    y_jitter = if_else(is_duplicated, Ausplot_Y + runif(n(), -0.025, 0.025), Ausplot_Y) #create y_jitter column
-  ) 
-
-
-d <- df %>% 
-  filter(!Genus_Species == "Unidentified tree") %>% 
-  group_by(Genus_Species) %>% 
-  mutate(median_diameter = ceiling(median(Diameter, na.rm = TRUE)) + 3.5)  %>% 
-  mutate(size_class = case_when(
-    Diameter < median_diameter ~ "small", 
-    Diameter >= median_diameter ~ "large")) %>% 
-  ungroup() %>% 
-  mutate(species_size = paste0(Genus_Species, " ", size_class)) %>% 
-  group_by(species_size) %>% 
-  mutate(observation_count = n()) %>% 
-  ungroup() %>%
-  mutate(species_size2 = case_when(
-    observation_count < threshold & str_ends(species_size, "small") ~ "Misc_small",
-    observation_count < threshold & str_ends(species_size, "large") ~ "Misc_large",
-    TRUE ~ species_size)) %>% 
-  group_by(species_size2) %>% 
-  mutate(obs = n()) %>% 
-  ungroup() %>% 
-  filter(!(obs < threshold)) 
-
-d <- d %>% 
-  filter(! species_size2 %in% c("Misc_small", "Eucalyptus pilularis large"))
-
-
-#make config
-configuration <- ppjsdm::Configuration(d$x_jitter, d$y_jitter, types = d$species_size2)
-plot(configuration)
-
-d %>% count(species_size2)
-
-#set parameters 
-window <- ppjsdm::Rectangle_window(x_range = c(0, 100), 
-                                   y_range = c(0, 100))
-
-nspecies <- length(levels(configuration$types))
-
-
-#fit model 
-fit<- ppjsdm::gibbsm(configuration = configuration, #do the fit 
-                     window = window,
-                     short_range = matrix(10, nspecies, nspecies), 
-                     model = "exponential",
-                     saturation = 10, 
-                     nthreads = 4, 
-                     use_regularization = FALSE, 
-                     fitting_package = "glmnet",
-                     dummy_distribution = "stratified",
-                     min_dummy = 1, dummy_factor = 1e10, 
-                     max_dummy = 1e3)
-
-
-sum <- summary(fit)
-extra_df <- make_sum_df(fits = list(fit), 
-                        summ = list(sum))
-
-extra_df <- extra_df %>% mutate(site = "Tinebank")
-
-extra_df <- extra_df %>% 
-  mutate(range_ci = hi - lo)
-
-at <- extra_df %>% filter(range_ci > 5)
-
-full_df <- rbind(full_df, extra_df)
-
 ###################################################################################
 ## WaratahMix
 
@@ -1177,7 +860,7 @@ full_df <- rbind(full_df, extra_df)
 ## checks on full df
 full_df %>% count(site)
 
-all(!duplicated(full_df$alpha))
+all(duplicated(full_df$alpha))
 
 full_df %>% filter(range_ci > 5)
 
@@ -1186,12 +869,12 @@ full_df %>% filter(range_ci > 5)
 ####################
 # Make some useful plotting columns
 full_df2 <- full_df %>% 
-  mutate(class_from = str_extract(from, "\\w+$")) %>% 
-  mutate(class_to = str_extract(to, "\\w+$")) %>% 
+  mutate(size_from = str_extract(from, "\\w+$")) %>% 
+  mutate(size_to = str_extract(to, "\\w+$")) %>% 
   mutate(species_from = str_extract(from, "\\w+\\s+\\w+")) %>% 
   mutate(species_to = str_extract(to, "\\w+\\s+\\w+"))
 
-full_df2 <- full_df2 %>% mutate(class_int = paste(class_from, sep = "_", class_to))
+full_df2 <- full_df2 %>% mutate(size_int = paste(size_from, sep = "_", size_to))
 
 #make regions 
 full_df2 <- full_df2 %>% 
@@ -1219,20 +902,20 @@ full_df2 <- full_df2 %>%
 
 
 ### save this df at this point 
-write.csv(full_df2, "sp_size_df_t12_withmisc.csv")
+write.csv(full_df2, "sp_size_df_t15_withmisc_updated.csv")
 
 
 #Oop need to fix an issue with misc 
 full_df2 <- full_df2 %>% 
-  mutate(class_from = case_when(class_from == "Misc_small" ~ "small", 
-                                class_from == "Misc_large" ~ "large", 
-                                TRUE ~ class_from)) %>% 
-  mutate(class_to = case_when(class_to == "Misc_small" ~ "small", 
-                              class_to == "Misc_large" ~ "large", 
-                              TRUE ~ class_to)) 
+  mutate(size_from = case_when(size_from == "Misc_small" ~ "small", 
+                                size_from == "Misc_large" ~ "large", 
+                                TRUE ~ size_from)) %>% 
+  mutate(size_to = case_when(size_to == "Misc_small" ~ "small", 
+                              size_to == "Misc_large" ~ "large", 
+                              TRUE ~ size_to)) 
 
 
-full_df2 <- full_df2 %>% mutate(class_int = paste(class_from, sep = "_", class_to))
+full_df2 <- full_df2 %>% mutate(size_int = paste(size_from, sep = "_", size_to))
 
 
 #Assign a species to canopy or subcanopy 
@@ -1242,19 +925,19 @@ species_class <- species_class %>%
 
 species_class <- species_class %>% dplyr::rename(species_from = Genus_Species)
 full_df2 <- left_join(full_df2, species_class, by = "species_from")
-full_df2 <- full_df2 %>% rename(cc_from = Class)
+full_df2 <- full_df2 %>% rename(class_from = Class)
 
 species_class <- species_class %>% dplyr::rename(species_to = species_from)
 full_df2 <- left_join(full_df2, species_class, by = "species_to")
-full_df2 <- full_df2 %>% rename(cc_to = Class)
+full_df2 <- full_df2 %>% rename(class_to = Class)
 
 #For misc put misc 
 
 full_df2 <- full_df2 %>% 
-  mutate(cc_to = ifelse(is.na(cc_to), "Misc", cc_to)) 
+  mutate(class_to = ifelse(is.na(class_to), "Misc", class_to)) 
 
 full_df2 <- full_df2 %>% 
-  mutate(cc_from = ifelse(is.na(cc_from), "Misc", cc_from)) 
+  mutate(class_from = ifelse(is.na(class_from), "Misc", class_from)) 
 
 
 full_df2 <- full_df2 %>% 
@@ -1265,21 +948,21 @@ full_df2 <- full_df2 %>%
 
 
 full_df2 <- full_df2 %>% 
-  mutate(cc_int = paste0(cc_from, "_", cc_to))
+  mutate(class_int = paste0(class_from, "_", class_to))
 
 #check classes 
-full_df2 %>% count(cc_int)
+full_df2 %>% count(class_int)
 
 #Put the same classes together because there is no difference between S_C and C_S 
 full_df2 <- full_df2 %>% 
-  mutate(cc_int = case_when(cc_int == "Canopy_Misc" ~ "Misc_Canopy", 
-                            cc_int == "Canopy_Subcanopy" ~ "Subcanopy_Canopy", 
-                            cc_int == "Subcanopy_Misc" ~ "Misc_Subcanopy", 
-                            TRUE ~ cc_int))
+  mutate(class_int = case_when(class_int == "Canopy_Misc" ~ "Misc_Canopy", 
+                            class_int == "Canopy_Subcanopy" ~ "Subcanopy_Canopy", 
+                            class_int == "Subcanopy_Misc" ~ "Misc_Subcanopy", 
+                            TRUE ~ class_int))
 
 ##Add a functional group size column 
 full_df2 <- full_df2 %>% 
-  mutate(group = paste0(cc_from, ".", class_from,  "_", cc_to, ".", class_to))
+  mutate(group = paste0(class_from, ".", size_from,  "_", class_to, ".", size_to))
 
 full_df2 %>% count(group) 
   
@@ -1305,11 +988,11 @@ full_df2 <- full_df2 %>%
 #Fix two issues 
 
 full_df2 <- full_df2 %>% 
-  mutate(cc_to = ifelse(species_to == "Synoum glandulosum", "Subcanopy", cc_to)) %>% 
-  mutate(cc_from = ifelse(species_from == "Synoum glandulosum", "Subcanopy", cc_from)) %>% 
-  mutate(cc_to = ifelse(species_to == "Lophostemon sp", "Subcanopy", cc_to)) %>% 
-  mutate(cc_from = ifelse(species_from == "Lophostemon sp", "Subcanopy", cc_from))
+  mutate(class_to = ifelse(species_to == "Synoum glandulosum", "Subcanopy", class_to)) %>% 
+  mutate(class_from = ifelse(species_from == "Synoum glandulosum", "Subcanopy", class_from)) %>% 
+  mutate(class_to = ifelse(species_to == "Lophostemon sp", "Subcanopy", class_to)) %>% 
+  mutate(class_from = ifelse(species_from == "Lophostemon sp", "Subcanopy", class_from))
 
 #write out final version 
 
-write.csv(full_df2, "sp_size_df_t12_withmisc_clean.csv")
+write.csv(full_df2, "sp_size_df_t15_withmisc_updated.csv")

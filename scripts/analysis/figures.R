@@ -12,6 +12,9 @@ df <- df_add3_5_t15
 
 #or use updated df with misc and t = 12
 df <- read.csv("sp_size_df_t12_withmisc_clean.csv")
+
+#OR 
+fg_size <- read.csv("scripts/model_specifications/fg_size/fg_size_df_t15_updated.csv")
 # 
 # species_class <- species_class %>% select(Species, edge_case)
 # species_class <- species_class %>% rename(species_to = species_from)
@@ -33,10 +36,15 @@ df <- read.csv("sp_size_df_t12_withmisc_clean.csv")
 
 
 ## Within-species interactions 
-within <- df %>% 
-  filter(species_from == species_to)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     
+within <- fg_size %>% 
+  filter(class_from == class_to)    
+
 within <- within %>% 
   mutate(fill_col = ifelse(sig == 1, as.character(georegion), NA))
+
+#add sig 
+within <- within %>% 
+  mutate(sig = ifelse(lo > 0 | hi < 0, 1 , NA))
 
 
 # within <- within %>%
@@ -54,15 +62,19 @@ within <- within %>%
 
 ###### Overall within-sp interactions 
 
-within <- within %>% 
-  mutate(alpha2 = ifelse(alpha < -2.25, -2.33, alpha))
-
 withinfig <- within %>% 
-  mutate(class_int = case_when(
-    class_int == "small_small" ~ "Small ↔ Small", 
-    class_int == "small_large" ~ "Small ↔ Large", 
-    class_int == "large_large" ~ "Large ↔ Large")) %>% 
-  ggplot(aes(x = alpha2, y = class_int, groups = cc_to)) + 
+  mutate(size_int = case_when(
+    size_int == "small small" ~ "Small ↔ Small", 
+    size_int == "small large" ~ "Small ↔ Large", 
+    size_int == "large large" ~ "Large ↔ Large")) %>% 
+  mutate(size_int = as.factor(size_int)) %>% 
+  mutate(size_int = fct_relevel(size_int, 
+                                "Small ↔ Small",
+                                "Small ↔ Large", 
+                                "Large ↔ Large",)) %>% 
+  mutate(class_from = as.factor(class_from)) %>% 
+  mutate(class_from = fct_relevel(class_from, "Subcanopy", "Canopy")) %>% 
+  ggplot(aes(x = alpha, y = size_int, groups = class_from)) + 
    geom_vline(xintercept = 0, colour = "red") +
   geom_violin(colour = "black", 
               scale = "width", 
@@ -73,39 +85,37 @@ withinfig <- within %>%
                outlier.shape = NA, 
                fill = NA,
                width = 0.4) +
-  geom_point(aes(colour = cc_to), 
+  geom_point(aes(colour = class_from), 
              position = position_jitterdodge(seed = 21, 
                                              jitter.width = 0.3,
                                              dodge.width = 0.75), 
              shape = 19, 
              size = 1.75, 
-             alpha = 0.5) +
-  scale_colour_manual(values = c("#35B779FF", "#39568CFF", "black"), 
-                      breaks = c("Subcanopy", "Canopy"),
-                      name = "Strata") + 
-  geom_text(aes(label = ifelse(alpha2 == -2.33, "-3.3", "")), 
-            hjust = 1,
-            vjust = 2.5, 
-            size = 2.25) +
-  stat_summary(aes(fill = cc_to), fun = mean,
-               geom = "point",
-               shape = 19,
-               size = 3, 
-               color="black",
-               position = position_dodge(width=0.7, preserve = "single"), 
-               show.legend = FALSE) +
+             alpha = 0.4) +
+  scale_colour_manual(values = c("#39568CFF", "#35B779FF"), 
+                      breaks = c("Canopy", "Subcanopy"),
+                      name = "Functional Group") + 
+  # stat_summary(aes(fill = class_from), fun = mean,
+  #              geom = "point",
+  #              shape = 19,
+  #              size = 3, 
+  #              color="black",
+  #              position = position_dodge(width=0.7, preserve = "single"), 
+  #              show.legend = FALSE) +
   theme_bw() + # Theme
-  theme(text = element_text(size = 18), 
+  theme(text = element_text(size = 14), 
         legend.text=element_text(size= 12), 
-        axis.title.x = element_text(margin = margin(8, 0, 0, 0))) + 
+        axis.title.x = element_text(size = 14, 
+                                    margin = margin(8, 0, 0, 0)), 
+        axis.text.y = element_text(size = 14), 
+        axis.text.x = element_text(size = 13)) + 
   guides(colour = guide_legend(override.aes = list(size=3.5))) + 
   labs(x = "Interaction Coefficient", y = "") +
-  ylab("") + 
-  ggtitle("Within-species interactions") 
+  ylab("")  
 
 withinfig
 
-ggsave("within.png", withinfig, 
+ggsave("within_fg_si.png", withinfig, 
        width = 11, height = 6.75)
 
 

@@ -1,13 +1,23 @@
 library(ppjsdm)
-library(dplyr)
 
 
-#Understand what effect a coefficient has for a fitted ppjsdm model
+#' Effect Size 
+#'
+#' For a given type in a fitted ppjsdm model, this function computes the change in likelihood of occurrence of the given type when another type is dropped (i.e. the effect of one type on another).
+#'
+#' @param configuration A ppjsdm::Configuration object 
+#' @param fit The fitted ppjsdm model using ppjsdm:gibbsm
+#'
+#' @returns Dataframe of effect size for each type in the configuration
+#' @export
+#'
+#' @examples 
+#' 
 
 effect_size <- function(configuration, #full ppjsdm::Configuration for the model
                         fit #full fitted ppjsdm model
                         ){
-set.seed(12345) #set seed for reproducibility of glm
+set.seed(12345) #set seed for reproducibility of regression 
 
 full_config <- configuration
 all_types <- levels(unique(full_config$types))
@@ -21,14 +31,14 @@ colnames(df) <- c("from", "to", "alpha", "mean_effect", "quan_0", "quan_25", "qu
 
 for(type_i in all_types){ #open first loop 
   
-  types <- setdiff(all_types, type_i)
+  types <- setdiff(all_types, type_i) #types except for type_i
   
   #get the locations of species i 
   locs <- configuration[type_i]
   
   #compute full papangelou for type i 
   full <- compute_papangelou(fit, 
-                             x = locs$x,
+                             x = locs$x, 
                              y = locs$y,
                              configuration = configuration, 
                              type = type_i, 
@@ -38,8 +48,8 @@ for(type_i in all_types){ #open first loop
   for(type_j in types){ #open second loop 
   
   #construct dropped type configuration
-  drop_types <- setdiff(all_types, type_j) 
-  drop_config <- full_config[drop_types] #type_i needed in this config
+  drop_types <- setdiff(all_types, type_j) #all types except type_j
+  drop_config <- full_config[drop_types] #configuration with type_j dropped 
   #plot(drop_config)
   
   #get papangelou intensities for dropped fit 
@@ -71,25 +81,25 @@ df <- rbind(df, tmp)
 } #close first loop 
 
 
-for(type_k in all_types){ #open third loop
+for(type_k in all_types){ #the loop computes the effect size of intraspecific (intra-group) interactions 
 
-  locs_k <- configuration[type_k] #extract locs for third loop
+  locs_k <- configuration[type_k] #extract locations for third loop
   
   full <- compute_papangelou(fit, 
                              x = locs_k$x,
                              y = locs_k$y,
                              configuration = configuration, 
                              type = type_k, 
-                             drop_type_from_configuration = FALSE,
+                             drop_type_from_configuration = FALSE, #do not drop type from configuration
                              use_log = TRUE, 
                              nthreads = 3)
   
   drop <- compute_papangelou(fit = fit,
-                             configuration = configuration,
+                             configuration = configuration, #same configuration
                              x = locs_k$x,
                              y = locs_k$y,
                              type = type_k, 
-                             drop_type_from_configuration = TRUE, 
+                             drop_type_from_configuration = TRUE, #now drop the type from configuration here
                              nthreads = 3, 
                              use_log = TRUE)
   
@@ -125,3 +135,13 @@ df <- df %>%
 #Test Function for site: ZigZag
 e <- effect_size(zigzag_config,
                  zigzag_fit)
+
+
+# 
+# 1. Effect size: For a given type in a fitted ppjsdm model, this function computes 
+# the change in likelihood of occurrence of the given type when another type is dropped 
+# (i.e. the effect of one type on another). This is done by computing the conditional 
+# Papangelou intensity at the locations of type_i when conditioning on the fitted model
+# and locations of all other individuals except type_i. Then, type_j is dropped from the
+# configuration and the conditional Papangelou is computed for the locations of type_i 
+# based on the fitted model and locations of all other individuals except for type_i and type_j. 

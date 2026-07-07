@@ -32,20 +32,23 @@ between <- df %>%
   mutate(class_int = if_else(class_int == "large_small", "small_large", class_int))
 
 
-#### Three kinds of weighted means we can compute: 
+#### Two kinds of weighted means we can compute: 
 #1. Mean weighted by the standard error of the coefficient estimate
-#2. Mean weighted by if coefficient is significant or not 
 #3. Mean weighted by the span of the confidence interval 
 
 ## 1. Standard error weighting 
 w1 <- within %>% 
   group_by(group) %>% 
-  summarise(w.mean = weighted.mean(alpha, se)) %>% 
+  summarise(w.mean =  (alpha, se), 
+            w.mean.inv.se = weighted.mean(alpha, (1/se)), 
+            mean = mean(alpha)) %>%
   ungroup()
 
 b1 <- between %>% 
   group_by(group) %>% 
-  summarise(w.mean = weighted.mean(alpha, se)) %>% 
+  summarise(w.mean = weighted.mean(alpha, se), 
+            w.mean.inv.se = weighted.mean(alpha, (1/se)), 
+            mean = mean(alpha)) %>% 
   ungroup()
 
 b1 <- between %>% 
@@ -62,38 +65,6 @@ all1 <- df %>%
 # lm(data = within, 
 #    alpha ~ group, #This is not working because all groups need to be intercept and due to current data structure is not working
 #    weights = se) #can change data structure, but weighted.mean fun does the same thing
-
-
-
-
-
-#2. Mean weighted by if coefficient is significant or not 
-#DONT USE!!!
-df2 <- df %>% 
-  mutate(sig = ifelse(is.na(sig) == T, 1, 2)) #make sig col 1, 2 
-
-#within
- w2 <- df2 %>% 
-  filter(species_from == species_to) %>% 
-  mutate(class_int = if_else(class_int == "large_small", "small_large", class_int)) %>% 
-  group_by(group) %>% 
-  summarise(w.mean = weighted.mean(alpha, sig)) %>% 
-  ungroup()
-
-#between 
-b2 <- df2 %>% 
-  filter(!(species_from == species_to)) %>% 
-  mutate(class_int = if_else(class_int == "large_small", "small_large", class_int)) %>% 
-  group_by(group) %>% 
-  summarise(w.mean = weighted.mean(alpha, sig)) %>% 
-  ungroup()
-
-#all
-all2 <- df2 %>%  
-  group_by(group, site) %>% 
-  summarise(w.mean = weighted.mean(alpha, sig)) %>% 
-  ungroup()
-
 
 
 #3. Mean weighted by the span of the confidence interval 
@@ -124,17 +95,39 @@ all3 <- df %>%
 #### Comparison of methods 
 
 # For within only 
-within_wmean <- cbind(w1, w2$w.mean, w3$w.mean)
-colnames(within_wmean) <- c("group", "se", "sig", "ci_range")
+# within_wmean <- cbind(w1, w3$w.mean)
+# colnames(within_wmean) <- c("group", "se",  "ci_range")
+# 
+# 
+# # For between only 
+# bw_wmean <- cbind(b1, b3$w.mean)
+# colnames(bw_wmean) <- c("group", "se",  "ci_range")
+# 
+# # For all data (between site)
+# all_wmean <- cbind(all1,  all3$w.mean)
+# colnames(all_wmean) <- c("group", "site", "se", "ci_range")
 
 
-# For between only 
-bw_wmean <- cbind(b1, b2$w.mean, b3$w.mean)
-colnames(bw_wmean) <- c("group", "se", "sig", "ci_range")
+#Calculate weighted mean manually as small-small answer is weird
 
-# For all data (between site)
-all_wmean <- cbind(all1, all2$w.mean, all3$w.mean)
-colnames(all_wmean) <- c("group", "site", "se", "sig", "ci_range")
+#the formual is sum(x*w) / sum(w)
+w1 <- within %>% 
+  group_by(group) %>% 
+  summarise(w.mean = sum(alpha*se)/ sum(se)) %>%
+  ungroup()
+
+#just filter to subcanopy small 
+
+d <- df %>% 
+  filter(group == "Subcanopy.small_Subcanopy.small")
+
+up <- sum(d$alpha*d$se)
+lo <- sum(d$se)
+wmean <- up/lo #-0.067 compared to -0.087
+
+
+
+
 
 
 

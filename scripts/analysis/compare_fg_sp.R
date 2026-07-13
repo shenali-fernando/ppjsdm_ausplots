@@ -5,13 +5,20 @@ library(dplyr)
 library(ggpubr)
 
 
-#Load in dfs 
-sp_size <- read.csv("scripts/model_specifications/species_diameter/df_add3_5_t15.csv")
+# Read in model specification dfs 
 #or updated sp_size model 
 sp_size <- read.csv("scripts/model_specifications/species_diameter/sp_size_df_t15_misc_updated.csv")
-
+#and fg_size model 
 fg_size <- read.csv("scripts/model_specifications/fg_size/fg_size_df_t15_updated.csv")
 
+
+#Also need to read in the linear model predicted coefficients 
+#for sp_size
+#Read in the linear model post-hoc intraspecific coefficients 
+sp_preds <- read.csv("scripts/analysis/lm_sp_size_intra_updated.csv")
+
+#and for df_size
+fg_preds <- read.csv("scripts/analysis/lm_fg_size_intra.csv")
 
 #######################################################################################
 ############## SCATTERPLOT 
@@ -19,8 +26,7 @@ fg_size <- read.csv("scripts/model_specifications/fg_size/fg_size_df_t15_updated
 #  v the post-hoc (linear model of the species_size) models. There will be the 6 classes 
 # for each, and we can see where these line up on the one-to-one line 
 
-#Read in the linear model post-hoc intraspecific coefficients 
-intra_sp_preds <- read.csv("intra_pred_df_updatedmod.csv")
+
 
 #Get the medians for the within-sclass interactions for the a-priori (fg_size) model
 #first clean
@@ -143,8 +149,7 @@ full_fg_sp <- full_fg_sp %>%
                                 "Small ↔ Large", 
                                 "Large ↔ Large")) %>% 
   mutate(model = case_when(model == "fg_size" ~ "FG + Size", 
-                           model == "sp_size" ~ "Species + Size")) %>% 
-  mutate(model = as.factor(model)) 
+                           model == "sp_size" ~ "Species + Size"))
 
 
 ###########INTRA
@@ -154,11 +159,15 @@ intra <- full_fg_sp %>%
     (model == "Species + Size" & (species_from == species_to)) | 
     (model == "FG + Size" & (class_from == class_to))) 
 
+intra <- intra %>% 
+  mutate(class_from = as.factor(class_from)) %>% 
+  mutate(class_from = fct_relevel(class_from, "Subcanopy", "Canopy"))
+
 #and plot 
 ggplot(data = intra,
        aes(x = alpha, 
            y = size_int, 
-           groups = model)) + 
+           groups = class_from)) + 
   geom_vline(xintercept = 0, colour = "black", linetype = "dashed") +
   geom_violin(colour = "black", 
               scale = "width", 
@@ -169,19 +178,106 @@ ggplot(data = intra,
                outlier.shape = NA, 
                fill = NA,
                width = 0.4) +
-  geom_point(aes(colour = model), 
+  geom_point(aes(colour = class_from), 
              position = position_jitterdodge(seed = 21, 
                                              jitter.width = 0.3,
                                              dodge.width = 0.75), 
              shape = 19, 
              size = 1.75, 
              alpha = 0.25) +
-  guides(colour = guide_legend(reverse = TRUE, 
-                               title = "Model Groupings")) + 
-  facet_grid(~class_from) + 
+  scale_colour_manual(values = c("Canopy" = "#39568CFF", 
+                                 "Subcanopy" = "#35B779FF")) + 
+  guides(colour = guide_legend(reverse = TRUE)) +
+  facet_wrap(~model, ncol = 1) + 
   theme_bw() + 
   ylab("") + 
   xlab("Interaction coefficient")
+
+
+############### Instead of boxplot and violin, add the predicted lm model instead 
+#do some adding of cols and bind 
+fg_preds$model <- "FG + Size"
+sp_preds$model <- "Species + Size"
+
+preds <- rbind(fg_preds, sp_preds)
+
+preds <- preds %>% rename(class_from = group)
+
+#and order everything 
+preds <- preds %>% 
+  mutate(class_from = as.factor(class_from)) %>% 
+  mutate(class_from = fct_relevel(class_from, "Subcanopy", "Canopy")) %>% 
+  mutate(x = as.factor(x)) %>% 
+  mutate(x = fct_relevel(x, 
+                                "Small ↔ Small",
+                                "Small ↔ Large", 
+                                "Large ↔ Large"))
+
+#plot in 
+ggplot() +  
+  geom_vline(xintercept = 0, colour = "black", linewidth = 0.2, linetype = "dashed") +
+  geom_violin(data = intra,
+              aes(x = alpha, 
+                  y = size_int,
+                  groups = class_from),
+              scale = "width",
+              colour = "gray50",
+              width = 0.7,
+              fill = NA,
+              position = position_dodge(0.75)) +  
+  geom_point(data = intra,
+             aes(x = alpha, 
+                 y = size_int,
+                 groups = class_from,
+                 colour = class_from),
+             position = position_jitterdodge(seed = 21, 
+                                             jitter.width = 0.3,
+                                             dodge.width = 0.75), 
+             shape = 19, 
+             size = 1.75, 
+             alpha = 0.1) +
+  geom_point(data = preds,
+             aes(y = x,
+                 x = predicted,
+                 group = class_from,
+                 colour = class_from),
+             size = 1.5,
+             position = position_jitterdodge(seed = 21,
+                                             jitter.width = 0.05,
+                                             dodge.width = 0.75)) +
+  geom_crossbar(data = preds,
+                aes(y = x,
+                    x = predicted, 
+                    xmin = conf.low,
+                    xmax = conf.high,
+                    colour = class_from),
+                position = position_jitterdodge(seed = 21, 
+                                                jitter.width = 0.05,
+                                                dodge.width = 0.75),
+                linewidth = 0.35,
+                width = 0.45) +
+  scale_colour_manual(values = c("Canopy" = "#440154FF", 
+                                 "Subcanopy" =  "#1FA187FF"), 
+                      name = "Functional \n Group") + 
+  guides(colour = guide_legend(reverse = TRUE)) +
+  facet_wrap(~model, ncol = 1) + 
+  theme_bw() + 
+  ylab("") + 
+  xlab("Interaction coefficient") + 
+  theme(text = element_text(size = 12), 
+        legend.title = element_text(size = 10),
+        legend.text=element_text(size= 8), 
+        axis.title.x = element_text(margin = margin(8, 0, 0, 0), 
+                                    size = 12), 
+        strip.background = element_rect(fill = "gray95")) 
+
+ggsave("fig1_v2.png", 
+       width = 13, 
+       height = 14,
+       scale = 1.5,
+       units = "cm",
+       dpi = 300)
+
 
 
 #There is more clustering in the fg + size model in the L-L and S-S groupings 

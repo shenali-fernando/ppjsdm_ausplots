@@ -1,0 +1,119 @@
+---
+title: "make_site_covariates"
+format: html
+editor: visual
+---
+
+```{r}
+library(terra)
+library(geodata)
+library(dplyr)
+```
+
+## Make Site Covariates
+
+For the 48 AusPlot sites, we need to extract some site covariates. This is so that we can see if there is systematic variation in the amount of intra-group clustering or repulsion depending on environmental factors at the site level.
+
+If we think of this as a kind of linear model, we have our response of alpha, and intead of having site as a random variable now we include it as a dependent variable.
+
+There are many factors that give difference between our sites as they span the continent of Australia. However, as all the sites are in tall eucalpt forest there will be some overall similarities in the environmental covariates. For forest productivity in Australia, we know that climate and soil is important. We can use the bioclim variables for climate as these cover what we want, we can use TWI, soil moisture, bulk density and sand for soil variables. We can also use data of the Forest Productivity Index (FPI), Gross Primary Productivity (GPP) and NDVI which takes into account temperature, solar radiation and precipitation to understand where productivity is highest. We can also calculate site-specific variables such as stand basal area and diversity indices.
+
+### Make Site Covariate DF
+
+```{r}
+coords <- read.csv("../../data/ausplots/data_cleaned.csv")
+
+site_covariates <- coords |> 
+  select(Site_Name, Latitude, Longitude) |> 
+  distinct()
+```
+
+### Site Coordinates
+
+We need the coordinates of the sites first:
+
+```{r}
+coords <- coords |> 
+  select(Latitude, Longitude) |> 
+  distinct()
+```
+
+And then rename so we can run terra::extract
+
+```{r}
+coords <- coords |> 
+  rename(lat = Latitude) |> 
+  rename(lon = Longitude) |> 
+  relocate(lon)
+```
+
+### Bioclim
+
+Extract bioclim variables from geodata package
+
+```{r}
+clim <- worldclim_country(country = "Australia", 
+                          var = "bio",
+                          res = 0.5, 
+                          path = tempdir())
+```
+
+Extract values for the sites and bind back into dataframe
+
+```{r}
+clim_vals <- extract(clim, coords)
+```
+
+And rename so column names are meaningful
+
+```{r}
+colnames(clim_vals) <- c("Site_Nam", 
+                         "annual_mean_temp", 
+                         "mean_dinural_range", 
+                         "isothermality", 
+                         "temp_seasonality", 
+                         "max_temp_warmest_month", 
+                         "min_temp_coldest_month", 
+                         "temp_annual_range", 
+                         "mean_temp_wettest_quart", 
+                         "mean_temp_driest_quart", 
+                         "mean_temp_warmest_quart", 
+                         "mean_temp_coldest_quart", 
+                         "annual_precip", 
+                         "precip_wettest_month", 
+                         "precip_driest_month", 
+                         "precip_seasonality",
+                         "precip_wettest_quart", 
+                         "precip_driest_quart", 
+                         "precip_warmest_quart",
+                         "precip_coldest_quart")
+```
+
+Attach clim_vals back to site_covarites dataframe, preserving order:
+
+```{r}
+site_covariates <- cbind(site_covariates, clim_vals) 
+
+site_covariates <- site_covariates[, -4] #remove ID col 
+```
+
+### Soil and Landscape
+
+We can use the SLGA (the Soil and Landscape Grid of Australia) to pull out some soil and landscape variables that might be important. Keeping in mind that all sites have the **same** forest type (tall eucalypt forest) therefore there will be less variability in the types of soils and landscapes the sites are on.
+
+Scraping SLGA 13/07/2026. Set the API key first:
+
+```{r}
+Sys.setenv(
+  "GDAL_HTTP_HEADER_FILE" = "tern_api_key.txt")
+```
+
+```{r}
+
+```
+
+### Productivity
+
+### Diversity and Stand Basal Area
+
+### 

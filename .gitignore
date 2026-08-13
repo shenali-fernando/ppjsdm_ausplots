@@ -63,3 +63,4 @@ output/intra_sites.png
 output/intra_sites2.png
 output/summary_traits.csv
 scripts/analysis/tern_api_key.txt
+data/site_covariates.csv

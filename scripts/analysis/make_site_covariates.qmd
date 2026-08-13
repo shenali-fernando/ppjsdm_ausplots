@@ -8,6 +8,9 @@ editor: visual
 library(terra)
 library(geodata)
 library(dplyr)
+library(MODISTools)
+library(vegan)
+library(tidyr)
 ```
 
 ## Make Site Covariates
@@ -101,7 +104,7 @@ site_covariates <- site_covariates[, -4] #remove ID col
 
 We can use the SLGA (the Soil and Landscape Grid of Australia) to pull out some soil and landscape variables that might be important. Keeping in mind that all sites have the **same** forest type (tall eucalypt forest) therefore there will be less variability in the types of soils and landscapes the sites are on.
 
-Scraping SLGA 13/07/2026. Set the API key first:
+Scraping SLGA 13/07/2026. Set the API key first to access COGs from url:
 
 ```{r}
 Sys.setenv(
@@ -110,10 +113,226 @@ Sys.setenv(
 
 ```{r}
 
+slga_urls <- c('/vsicurl/https://data.tern.org.au/model-derived/slga/NationalMaps/SoilAndLandscapeGrid/DES/v2/DES_000_200_EV_N_P_AU_TRN_C_20190901.tif', #depth of soil (m)
+               '/vsicurl/https://data.tern.org.au/model-derived/slga/NationalMaps/SoilAndLandscapeGrid/BDW/v2/BDW_000_005_EV_N_P_AU_TRN_N_20230607.tif', #bulk density (g/cm3) at 0-0.05m
+               '/vsicurl/https://data.tern.org.au/model-derived/slga/NationalMaps/SoilAndLandscapeGrid/SND/v2/SND_000_005_EV_N_P_AU_TRN_N_20210902.tif', #sand % at 0-0.05m
+               '/vsicurl/https://data.tern.org.au/model-derived/slga/NationalMaps/Covariates/Mosaics/90m/Clim_etaaann.tif', #average areal actual evapotranspiration annual
+              '/vsicurl/https://data.tern.org.au/model-derived/slga/NationalMaps/Covariates/Mosaics/90m/Relief_twi_3s.tif') #twi
+
+slga_stack <- rast(slga_urls)
+
+#rename
+names(slga_stack) <- c("depth_of_soil_m",
+                     "bulk_density", 
+                     "sand_pc", 
+                     "annual_actual_ET",
+                     "twi")
+
+```
+
+\
+
+```{r}
+#some urls aren't working properly, so download manually from TERN and add to the raster stack: 
+#annual potential evaporation (mm) 
+#organic carbon 
+#total nitrogen % 0-0.05m 
+#total phosphorous % 0-0.05m 
+
+manual_stack <- rast(c("../../data/manual_tern_tifs/NTO_005_015_EV_N_P_AU_NAT_C_20231101.tif",
+            "../../data/manual_tern_tifs/PTO_000_005_EV_N_P_AU_NAT_C_20231101.tif",
+            "../../data/manual_tern_tifs/SOC_000_005_05_N_P_AU_TRN_N_20220727.tif", 
+            "../../data/manual_tern_tifs/Clim_EPA.tif"))
+
+#Add to other SLGA (TERN) data 
+names(manual_stack) <- c("total_nitrogen", 
+                         "total_phosphorous", 
+                         "organic_carbon", 
+                         "annual_PET")
+#stack together and plot
+slga_stack_full <- c(slga_stack, manual_stack)
+plot(slga_stack_full, col = viridis(8, direction = -1))
+```
+
+And now we can extract the sites and bind back:
+
+```{r}
+slga_vals <- extract(slga_stack_full, coords)
+
+site_covariates <- cbind(site_covariates, slga_vals)
+site_covariates <- site_covariates[, -23] #remove ID col 
 ```
 
 ### Productivity
 
+Forest productivity is hypothesised to affect the strength of competition between trees in forests. There are a range of productivity indices we can use as covariates.
+
+The Forest Productivity Index (FPI), <https://data.gov.au/data/dataset/forest-productivity-index-version-1-0-sept-2024-release>, is one of these. It's based off ETA and PET climate data from BOM, NDVI, and 3PG modelling. The dataset is broken up into tiles of 37 across Australia and there is one tif for every year. So, what year? The censusing ended in 2015 we can choose this year. The different FPI rasters are different in extent, etc, so we cannot stack, but we can run a for loop instead:
+
+```{r}
+fpi_files <- c("../../data/forest_productivity_index/se55_2015_001.tif", 
+           "../../data/forest_productivity_index/sh56_2015_001.tif",
+           "../../data/forest_productivity_index/si50_2015_001.tif", 
+           "../../data/forest_productivity_index/si56_2015_001.tif", 
+           "../../data/forest_productivity_index/sj54_2015_001.tif",                               
+           "../../data/forest_productivity_index/sj55_2015_001.tif",
+           "../../data/forest_productivity_index/sk55_2015_001.tif")
+
+working <- site_covariates[, 1:3]
+
+for(i in fpi_files){
+  r <- rast(i)
+  
+  r_vals <- extract(r, coords)
+  r_vals <- r_vals[-1]
+  working <- cbind(working, r_vals)
+  
+}
+
+
+#and then summarise across columns to get to one column with all values 
+working <- working |> 
+  rowwise() |> 
+  mutate(fpi = mean(c_across(4:10), 
+                    na.rm = TRUE)) |> 
+  ungroup()
+
+#and attach this column to site_covariates df 
+
+site_covariates <- cbind(site_covariates, working[11])
+```
+
+MODIS has data for Gross Primary Productivity (GPP).
+
+Using the package MODISTools, we need to make a df in certain format, check what products and bands are available and then run the subset for our sites. Citation: Running, S., & Zhao, M. (2021). MODIS/Terra Net Primary Production Gap-Filled Yearly L4 Global 500m SIN Grid V061 \[Dataset\]. NASA Land Processes Distributed Active Archive Center <https://doi.org/10.5067/MODIS/MOD17A3HGF.061>. Date accessed: 2026-07-13
+
+```{r}
+df <- site_covariates[1:3] |> 
+  rename(site_name = Site_Name) |> 
+  rename(lat = Latitude) |> 
+  rename(lon = Longitude)
+
+mt_products()
+
+mt_bands(product = "MOD17A3HGF") #yearly primary productivity
+```
+
+```{r}
+
+pp <- mt_batch_subset(df = df, 
+                      product = "MOD17A3HGF", 
+                      band = "Npp_500m", 
+                      start = "2015-01-01", 
+                      end = "2015-12-", #extract from 2015 only
+                      km_lr = 0, #just one point per site 
+                      km_ab = 0)
+
+```
+
+\
+And bind back to site covariates df:
+
+```{r}
+pp <- pp |> 
+  select(site, value) |> 
+  rename(Site_Name = site)
+
+site_covariates <- left_join(site_covariates, 
+                             pp, 
+                             by = "Site_Name")
+
+site_covariates <- site_covariates |> 
+  rename(NPP = value)
+```
+
 ### Diversity and Stand Basal Area
 
-### 
+Inter-site variables can also be calculated. First, calculating the number of species in a site:
+
+```{r}
+data <- read.csv("../../data/ausplots/data_cleaned.csv")
+
+num <- data |> 
+  group_by(Site_Name) |> 
+  summarise(c = n_distinct(Genus_Species)) |> 
+  ungroup()
+```
+
+Calculating stand basal as DBH is given for all sites:
+
+```{r}
+data1 <- data |>  
+  mutate(basal_area = (pi * ((Diameter/2)^2))/10000) |> 
+  group_by(Site_Name) |> 
+  summarise(sum(basal_area, na.rm = TRUE)) |> 
+  ungroup()
+```
+
+And add these into larger dataframe:
+
+```{r}
+site_covariates <- left_join(site_covariates, num, by = "Site_Name")
+site_covariates <- site_covariates |> 
+  rename(no_species = c)
+```
+
+```{r}
+site_covariates <- left_join(site_covariates, data1, by = "Site_Name")
+site_covariates <- site_covariates |> 
+  rename(basal_area_m2_ha = `sum(basal_area, na.rm = TRUE)`)
+```
+
+### Save site_covariates
+
+First add the regions:
+
+```{r}
+site_covars <- site_covars |> 
+  mutate(region = case_when(Site_Name %in% c("Carey", "Dombakup", "Warren", "Dawson", "Giants", "Sutton", "Frankland", "Clare", "Collins") ~ "WA", 
+                            Site_Name %in% c("ANU363", "ANU589", "ANU101", "Ada Tree", "HardyCreek") ~ "VIC",
+                            Site_Name %in% c("Turtons", "Lardner", "Weeaproinah") ~ "Otways", 
+                            Site_Name %in% c("Newline", "WaratahMix", "WogWay", "Goodenia", "Candelo") ~ "seNSW", 
+                            Site_Name %in% c("Baldy", "Herberton", "Lamb Range", "Koombooloomba") ~ "QLD", 
+                            Site_Name %in% c("MinesRd", "A-Tree", "Tinebank", "Lorne", "BirdTree", "BlackBull", "Bruxner", "Osullivans") ~ "nNSW", 
+                            Site_Name %in% c("Flowerdale", "Dip", "Mackenzie", "Caveside") ~ "ns_TAS", 
+                            Site_Name %in% c("Bird", "Supersite", "NorthStyx", "Weld", "ZigZag", "MtField") ~ "ss_TAS", 
+                            Site_Name %in% c("BlackRiver", "BondTier") ~ "King_TAS", 
+                            Site_Name %in% c("MtMaurice", "BenRidge") ~ "Ben_TAS", 
+                            TRUE ~ Site_Name))
+
+site_covars <- site_covars |> 
+  mutate(georegion = case_when(Site_Name %in% c("Carey", "Dombakup", "Warren", "Dawson", "Giants", "Sutton", "Frankland", "Clare", "Collins") ~ "WA", 
+                               Site_Name %in% c("ANU363", "ANU589", "ANU101", "Ada Tree", "HardyCreek", "Turtons", "Lardner", "Weeaproinah") ~ "VIC", 
+                               Site_Name %in% c("Newline", "WaratahMix", "WogWay", "Goodenia", "Candelo") ~ "seNSW", 
+                               Site_Name %in% c("Baldy", "Herberton", "Lamb Range", "Koombooloomba") ~ "QLD", 
+                               Site_Name %in% c("MinesRd", "A-Tree", "Tinebank", "Lorne", "BirdTree", "BlackBull", "Bruxner", "Osullivans") ~ "nNSW", 
+                               Site_Name %in% c("Flowerdale", "Dip", "Mackenzie", "Caveside", "Bird", "Supersite", "NorthStyx", "Weld", "ZigZag", "MtField",       "BlackRiver", "BondTier", "MtMaurice", "BenRidge") ~ "TAS", 
+                               TRUE ~ Site_Name))
+```
+
+And then save the site_covariates dataframe so we can explore in explore_site_covariates.qmd:
+
+```{r}
+write.csv(site_covariates, "site_covariates_new.csv")
+```
+
+### Check against old covariates
+
+Previously I extracted the MAT and MAP from the ausplots supplementary materials. It would be good to check how similar the two data from the different sources are.
+
+MAT is very similar, however MAP is changing quite a lot...
+
+```{r}
+new <- read.csv("scripts/analysis/site_covariates_new.csv")
+old <- read.csv("data/site_covariates.csv")
+
+old <- old |> select(Site_Name, MAT, MAP, FPI, GPP)
+new <- new |> select(Site_Name, annual_mean_temp, annual_precip, fpi, NPP)
+
+comb <- full_join(old, new, by = "Site_Name")
+
+comb$MAP - comb$annual_precip
+
+comb$MAT - comb$annual_mean_temp
+
+```

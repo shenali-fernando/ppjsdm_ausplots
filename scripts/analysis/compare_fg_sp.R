@@ -235,17 +235,17 @@ ggplot() +
                                              dodge.width = 0.75), 
              shape = 19, 
              size = 1.75, 
-             alpha = 0.1) +
+             alpha = 0.08) +
   geom_point(data = preds,
              aes(y = x,
                  x = predicted,
                  group = class_from,
                  colour = class_from),
-             size = 1.5,
+             size = 1.7,
              position = position_jitterdodge(seed = 21,
                                              jitter.width = 0.05,
                                              dodge.width = 0.75)) +
-  geom_crossbar(data = preds,
+  geom_linerange(data = preds,
                 aes(y = x,
                     x = predicted, 
                     xmin = conf.low,
@@ -254,11 +254,10 @@ ggplot() +
                 position = position_jitterdodge(seed = 21, 
                                                 jitter.width = 0.05,
                                                 dodge.width = 0.75),
-                linewidth = 0.35,
-                width = 0.45) +
+                linewidth = 1) +
   scale_colour_manual(values = c("Canopy" = "#440154FF", 
                                  "Subcanopy" =  "#1FA187FF"), 
-                      name = "Functional \n Group") + 
+                      name = "Functional \nGroup") + 
   guides(colour = guide_legend(reverse = TRUE)) +
   facet_wrap(~model, ncol = 1) + 
   theme_bw() + 
@@ -270,6 +269,7 @@ ggplot() +
         axis.title.x = element_text(margin = margin(8, 0, 0, 0), 
                                     size = 12), 
         strip.background = element_rect(fill = "gray95")) 
+
 
 ggsave("fig1_v2.png", 
        width = 13, 
@@ -318,11 +318,16 @@ inter <- inter %>%
 # group interactions overlap: 
 
 #plot
-inter %>% 
+sp_and_fg <- inter |> 
   filter(int %in% c("Canopy large_Subcanopy large", 
                     "Canopy large_Subcanopy small", 
                     "Canopy small_Subcanopy large",
-                    "Canopy small_Subcanopy small")) %>% 
+                    "Canopy small_Subcanopy small")) |> 
+  mutate(int = case_when(int == "Canopy large_Subcanopy large" ~ "Canopy large ↔ Subcanopy large", 
+                         int == "Canopy large_Subcanopy small" ~ "Canopy large  ↔ Subcanopy small", 
+                         int == "Canopy small_Subcanopy large" ~  "Canopy small  ↔ Subcanopy large",
+                         int == "Canopy small_Subcanopy small" ~ "Canopy small  ↔ Subcanopy small", 
+                         TRUE ~ int)) |> 
 ggplot(
        aes(x = alpha, 
            y = int, 
@@ -343,23 +348,29 @@ ggplot(
                                              dodge.width = 0.75), 
              shape = 19, 
              size = 1.75, 
-             alpha = 0.25) +
+             alpha = 0.15) +
   guides(colour = guide_legend(reverse = TRUE, 
                                title = "Model Groupings")) + 
   theme_bw() + 
   ylab("") + 
-  xlab("Interaction coefficient") + 
-  ggtitle("Between-group interactions with overlap of the models")
+  xlab("Interaction coefficient") 
 
 ############
 #also going to plot the between-group interactions where there is no overlap for the two model 
-inter %>% 
+sp <- inter %>% 
   filter(int %in% c("Canopy large_Canopy large", 
                     "Canopy large_Canopy small", 
                     "Canopy small_Canopy small", 
                     "Subcanopy large_Subcanopy large",
                     "Subcanopy large_Subcanopy small",
                     "Subcanopy small_Subcanopy small")) %>% 
+  mutate(int = case_when(int == "Canopy large_Canopy large" ~ "Canopy large ↔ Canopy large", 
+                         int == "Canopy large_Canopy small" ~ "Canopy large ↔ Canopy small",
+                         int == "Canopy small_Canopy small" ~ "Canopy small ↔ Canopy small", 
+                         int == "Subcanopy large_Subcanopy large" ~ "Subcanopy large ↔ Subcanopy large", 
+                         int == "Subcanopy large_Subcanopy small" ~ "Subcanopy large ↔ Subcanopy small", 
+                         int == "Subcanopy small_Subcanopy small" ~ "Subcanopy small ↔ Subcanopy small",  
+                         TRUE ~ int)) |> 
   ggplot(
     aes(x = alpha, 
         y = int)) + 
@@ -378,10 +389,193 @@ inter %>%
                                              dodge.width = 0.75), 
              shape = 19, 
              size = 1.75, 
-             alpha = 0.25) +
+             alpha = 0.25, 
+             colour = "#00BFC4") +
+  geom_point(data = preds,
+             aes(y = group,
+                 x = predicted,
+                 group = group, 
+                 colour = class_from),
+             size = 1.7,
+             position = position_jitterdodge(seed = 21,
+                                             jitter.width = 0.05,
+                                             dodge.width = 0.75)) +
+  geom_linerange(data = preds_inter,
+                 aes(y = x,
+                     x = predicted, 
+                     xmin = conf.low,
+                     xmax = conf.high),
+                 position = position_jitterdodge(seed = 21, 
+                                                 jitter.width = 0.05,
+                                                 dodge.width = 0.75),
+                 linewidth = 1) +
   theme_bw() + 
   ylab("") + 
-  xlab("Interaction coefficient") + 
-  ggtitle("Between-group interactions for Species + Size model only")
+  xlab("Interaction coefficient") 
+
+library(patchwork)
+p <- sp_and_fg / sp + plot_annotation(tag_levels = "a") + plot_layout(axis_titles = "collect")
+p
+
+##########################################
+############### Instead of boxplot and violin, add the predicted lm model instead 
+#do some adding of cols and bind 
+sp_inter_preds <- read.csv("scripts/analysis/lm_sp_size_inter.csv")
+
+#and for df_size
+fg_inter_preds <- read.csv("scripts/analysis/lm_fg_size_inter.csv")
+
+#clean up and join together 
+fg_inter_preds$model <- "FG + Size"
+sp_inter_preds$model <- "Species + Size"
+
+preds_inter <- rbind(fg_inter_preds, sp_inter_preds)
+
+#rename things 
+preds_inter <- preds_inter |> 
+  mutate(group_name = case_when(x == "Canopy.large_Subcanopy.large" ~ "Canopy large ↔ Subcanopy large", 
+                           x == "Canopy.large_Subcanopy.small" ~ "Canopy large ↔ Subcanopy small", 
+                           x  == "Canopy.small_Subcanopy.large" ~ "Canopy small ↔ Subcanopy large",
+                           x == "Canopy.small_Subcanopy.small" ~ "Canopy small ↔ Subcanopy small",
+                           x == "Canopy.large_Canopy.large" ~ "Canopy large ↔ Canopy large", 
+                           x  == "Canopy.large_Canopy.small" ~ "Canopy large ↔ Canopy small",
+                           x == "Canopy.small_Canopy.small" ~ "Canopy small ↔ Canopy small", 
+                           x == "Subcanopy.large_Subcanopy.large" ~ "Subcanopy large ↔ Subcanopy large", 
+                           x == "Subcanopy.large_Subcanopy.small" ~ "Subcanopy large ↔ Subcanopy small", 
+                           x == "Subcanopy.small_Subcanopy.small" ~ "Subcanopy small ↔ Subcanopy small",  
+                           x == "Subcanopy small_Canopy large" ~ "Canopy large ↔ Subcanopy small", 
+                           x == "Subcanopy small_Canopy small" ~ "Canopy small ↔ Subcanopy small", 
+                           x == "Subcanopy large_Canopy large" ~ "Canopy large ↔ Subcanopy large", 
+                           x == "Subcanopy large_Canopy small" ~ "Canopy small ↔ Subcanopy large",
+                                 TRUE ~ x)) 
+
+a_pred <- preds_inter |> 
+ filter(group_name %in% c("Canopy large ↔ Subcanopy large", 
+                         "Canopy large ↔ Subcanopy small", 
+                         "Canopy small ↔ Subcanopy large",
+                        "Canopy small ↔ Subcanopy small"))
+
+b_pred <- preds_inter |> 
+  filter(! group_name %in% c("Canopy large ↔ Subcanopy large", 
+                           "Canopy large ↔ Subcanopy small", 
+                           "Canopy small ↔ Subcanopy large",
+                           "Canopy small ↔ Subcanopy small"))
 
 
+#similar to the previous plot we need to build two plots and join together 
+
+  
+sp_and_fg_inter <- inter |> 
+  filter(int %in% c("Canopy large_Subcanopy large", 
+                    "Canopy large_Subcanopy small", 
+                    "Canopy small_Subcanopy large",
+                    "Canopy small_Subcanopy small")) |> 
+  mutate(int = case_when(int == "Canopy large_Subcanopy large" ~ "Canopy large ↔ Subcanopy large", 
+                         int == "Canopy large_Subcanopy small" ~ "Canopy large ↔ Subcanopy small", 
+                         int == "Canopy small_Subcanopy large" ~  "Canopy small ↔ Subcanopy large",
+                         int == "Canopy small_Subcanopy small" ~ "Canopy small ↔ Subcanopy small", 
+                         TRUE ~ int)) |> 
+  ggplot(
+    aes(x = alpha, 
+        y = int, 
+        groups = model)) + 
+  geom_vline(xintercept = 0, colour = "black", linetype = "dashed") +
+  geom_violin(colour = "black", 
+              scale = "width", 
+              width = 0.7,
+              fill = NA,
+              position = position_dodge(0.75)) +
+  geom_point(aes(colour =model),
+             position = position_jitterdodge(seed = 21, 
+                                             jitter.width = 0.3,
+                                             dodge.width = 0.75), 
+             shape = 19, 
+             size = 1.75, 
+             alpha = 0.05) +
+  geom_point(data = a_pred,
+             aes(y = group_name,
+                 x = predicted,
+                 groups = model, 
+                 colour = model),
+             size = 1.7,
+             position = position_jitterdodge(seed = 21,
+                                             jitter.width = 0.05,
+                                             dodge.width = 0.75)) +
+  geom_linerange(data = a_pred,
+                 aes(y = group_name,
+                     x = predicted, 
+                     xmin = conf.low,
+                     xmax = conf.high, 
+                     groups = model, 
+                     colour = model),
+                
+                 position = position_jitterdodge(seed = 21, 
+                                                 jitter.width = 0.05,
+                                                 dodge.width = 0.75),
+                 linewidth = 1) +
+  theme_bw() + 
+  ylab("") + 
+  xlab("Interaction coefficient") 
+
+sp_and_fg_inter
+
+############
+#also going to plot the between-group interactions where there is no overlap for the two model 
+sp_inter <- inter %>% 
+  filter(int %in% c("Canopy large_Canopy large", 
+                    "Canopy large_Canopy small", 
+                    "Canopy small_Canopy small", 
+                    "Subcanopy large_Subcanopy large",
+                    "Subcanopy large_Subcanopy small",
+                    "Subcanopy small_Subcanopy small")) %>% 
+  mutate(int = case_when(int == "Canopy large_Canopy large" ~ "Canopy large ↔ Canopy large", 
+                         int == "Canopy large_Canopy small" ~ "Canopy large ↔ Canopy small",
+                         int == "Canopy small_Canopy small" ~ "Canopy small ↔ Canopy small", 
+                         int == "Subcanopy large_Subcanopy large" ~ "Subcanopy large ↔ Subcanopy large", 
+                         int == "Subcanopy large_Subcanopy small" ~ "Subcanopy large ↔ Subcanopy small", 
+                         int == "Subcanopy small_Subcanopy small" ~ "Subcanopy small ↔ Subcanopy small",  
+                         TRUE ~ int)) |> 
+  ggplot(
+    aes(x = alpha, 
+        y = int)) + 
+  geom_vline(xintercept = 0, colour = "black", linetype = "dashed") +
+  geom_violin(colour = "black", 
+              scale = "width", 
+              width = 0.7,
+              fill = NA,
+              position = position_dodge(0.75)) +
+  geom_point(position = position_jitterdodge(seed = 21, 
+                                             jitter.width = 0.3,
+                                             dodge.width = 0.75), 
+             shape = 19, 
+             size = 1.75, 
+             alpha = 0.05) +
+  geom_point(data = b_pred,
+             aes(y = group_name,
+                 x = predicted),
+             size = 1.7,
+             position = position_jitterdodge(seed = 21,
+                                             jitter.width = 0.05,
+                                             dodge.width = 0.75)) +
+  geom_linerange(data = b_pred,
+                 aes(y = group_name,
+                     x = predicted, 
+                     xmin = conf.low,
+                     xmax = conf.high),
+                 position = position_jitterdodge(seed = 21, 
+                                                 jitter.width = 0.05,
+                                                 dodge.width = 0.75),
+                 linewidth = 1) +
+  theme_bw() + 
+  ylab("") + 
+  xlab("Interaction coefficient") 
+
+library(patchwork)
+p_inter <- sp_and_fg_inter / sp_inter + plot_annotation(tag_levels = "a") + plot_layout(axis_titles = "collect")
+p_inter
+
+
+#spilt plot design 
+#additional info in splitting within-group (model-based predictions?) can use? 
+# inferences based on summary of glmm - what term has the strongest effect (look at summary)
+# or what has 

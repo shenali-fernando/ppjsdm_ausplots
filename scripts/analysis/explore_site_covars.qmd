@@ -1,0 +1,491 @@
+---
+title: "explore_site_covariates"
+format: html
+editor: visual
+---
+
+```{r}
+library(factoextra)
+library(corrplot)
+library(viridis)
+library(dplyr)
+```
+
+## Exploring Site Covariates
+
+After making a bunch of site covariates, now we need to decide which ones to actually use. There are a few different ways we can check this.
+
+Let's load in the site_covariates:
+
+```{r}
+site_covars <- read.csv("site_covariates_new.csv")
+```
+
+### Histogram
+
+```{r}
+for(i in 3:36){
+  hist(site_covars[,i], main = colnames(site_covars[i]))
+}
+```
+
+### Correlation Test
+
+Let's start with the correlation of the bioclim variables. We can start to get rid of these as we go to make the PCA and hierarchical clustering easier to read.
+
+```{r}
+#|fig-height: 9
+
+cor_mat <- cor(site_covars[, 3:36])
+
+corrplot.mixed(abs(cor_mat), tl.pos = "lt")
+```
+
+And a visualisation where we blank out correlations more than 0.8:
+
+```{r}
+filter_mat <- cor_mat
+filter_mat[abs(filter_mat) < 0.8] <- 0 
+
+corrplot(filter_mat, 
+         method = "number", type = "upper")
+```
+
+### Removing Covariates
+
+The variables that have no correlations over 0.80 are: Longitude, mean_dinural_range, isothermality, mean_temp_driest_quart, annual_precip, precip_warmest_quart, precip_coldest_quart, depth_soil, twi, total_phosphorous, organic_carbon, basal_area, no_species.
+
+There are some variable with a nearly perfect correlation (more than 0.90!) and many of them. We don't need another test to know these have to be excluded. These are:
+
+- max_temp_warmest_month
+
+- min_temp_coldest_month
+
+- mean_temp_warmest_quarter
+
+- mean_temp_wettest_quarter
+
+- mean_temp_coldest_quarter
+
+- precip_driest_month (choosing month to get rid over quarter because slightly higher correlations)
+
+- precip_wettest_month
+
+- NPP (correlated with temp and seasonality and ET...)
+
+- annual_actual_ET (correlated with temp, seasonality precip, and PET)
+
+Let's get rid of these and start thinking about what else we want to get rid of:
+
+```{r}
+site_covars <- site_covars |> 
+  select(! c("max_temp_warmest_month", 
+             "min_temp_coldest_month", 
+             "mean_temp_warmest_quart",
+             "mean_temp_coldest_quart", 
+             "mean_temp_wettest_quart", 
+             "precip_driest_month", 
+             "precip_wettest_month",
+             "annual_actual_ET",
+             "NPP",
+             "X")) #annoying number col
+colnames(site_covars)
+```
+
+We can run the correlation on the new dataframe:
+
+```{r}
+#| fig-height: 5.5
+
+cor_mat <- cor(site_covars[2:28])
+
+corrplot.mixed(cor_mat, tl.pos = "lt")
+```
+
+Looking a bit better - tbh should get rid of annual range, Latitude and NPP but we can keep it for a second...
+
+### Hierarchical Clustering
+
+I want to use hierarchical clustering using corrplot. So first take absolute value of the matrix because I don't care about direction of correlation.
+
+And then start with two rectangles of hierarchical clustering:
+
+```{r}
+#|fig-height: 5
+
+cor_mat <- cor(site_covars[,2:26])
+abs_cor_mat <- abs(cor_mat)
+
+corrplot(abs_cor_mat, 
+         order = "hclust", 
+         hclust.method = "complete", 
+         addrect = 2)
+```
+
+Two is quite uninformative, there is a mixture of a bunch of things.
+
+\
+With more rectangles:
+
+```{r}
+#| fig-height: 5.5
+
+#Four
+corrplot(abs_cor_mat, 
+         order = "hclust", 
+         hclust.method = "complete", 
+         addrect = 4)
+
+#Five 
+corrplot(abs_cor_mat, 
+         order = "hclust", 
+         hclust.method = "complete", 
+         addrect = 5)
+
+#Six 
+corrplot(abs_cor_mat, 
+         order = "hclust", 
+         hclust.method = "complete", 
+         addrect = 6)
+
+#Seven
+corrplot(abs_cor_mat, 
+         order = "hclust", 
+         hclust.method = "complete", 
+         addrect = 7)
+
+#Eight
+corrplot(abs_cor_mat, 
+         order = "hclust", 
+         hclust.method = "complete", 
+         addrect = 8)
+
+#Ten
+corrplot(abs_cor_mat, 
+         order = "hclust", 
+         hclust.method = "complete", 
+         addrect = 10)
+
+#Thirtheen
+corrplot(abs_cor_mat, 
+         order = "hclust", 
+         hclust.method = "complete", 
+         addrect = 13)
+
+```
+
+The top and bottom rectangles take a lot of hierarchies to start breaking up; i.e. these are pretty similar.
+
+### PCA
+
+```{r}
+covars_pca <- prcomp(site_covars[,4:26], 
+                     scale = TRUE) #scale to unit variance
+
+#and look at the summary
+summary(covars_pca) 
+```
+
+We can look at the dimensions that the PCA has pulled out and the amount of variance in the data they explain.
+
+```{r}
+#Get eigenvalues  
+eig.val <- get_eigenvalue(covars_pca) 
+eig.val 
+#scree plot to show how much variation the dimensions include 
+fviz_eig(covars_pca, col.var="blue")
+```
+
+```{r}
+var_loads <- covars_pca$rotation
+var_loads2 <- abs(var_loads)
+```
+
+\
+And then can create the biplot to visualise PCA results. The outer circle is the maximum possible variance of the variables in the dataset.
+
+```{r}
+#| fig-height: 6
+
+fviz_pca_var(covars_pca, 
+             col.var = "contrib", # Color by contributions 
+             repel = TRUE) +
+  scale_colour_viridis(option = "plasma", direction = -1) #can change colour pal
+```
+
+```{r}
+#| fig-height: 6
+
+fviz_pca_var(covars_pca, 
+             axes = c(1, 3),
+             col.var = "contrib", # Color by contributions 
+             repel = TRUE) +
+  scale_colour_viridis(option = "plasma", direction = -1) #can change colour pal
+```
+
+```{r}
+#| fig-height: 6
+
+fviz_pca_var(covars_pca, 
+             axes = c(2, 3),
+             col.var = "contrib", # Color by contributions 
+             repel = TRUE) +
+  scale_colour_viridis(option = "plasma", direction = -1) #can change colour pal
+```
+
+Probably what's more important is working out what and where are the differences between sites. We need to know if there even is a discernible difference between the sites for the covariates - which can be found through PCA ! This doesn't include Longitude and Latitude. ss (south slopes), ns (north slopes)
+
+1-9 is WA;\
+10, 13-15, 43, 47 ss_TAS\
+11, 12, 48, 44 ns_TAS\
+41-42 King TAS; 45-46 Ben TAS\
+16-20 seNSW\
+21-28 VIC (23, 26, 27 otways)\
+29-36 nNSW\
+37-40 wet tropics\
+
+So usethe georegion to the df. And then run pca with the groupings. First for broader georegion:
+
+```{r}
+fviz_pca_ind(covars_pca,
+             repel = TRUE,
+             axes = c(1, 2),
+             habillage = site_covars$georegion, 
+             addEllipses = TRUE, 
+             mean.point = FALSE)
+
+fviz_pca_ind(covars_pca,
+             repel = TRUE,
+             axes = c(1, 3),
+             habillage = site_covars$georegion, 
+             addEllipses = TRUE, 
+             mean.point = FALSE)
+
+fviz_pca_ind(covars_pca,
+             repel = TRUE,
+             axes = c(2, 3),
+             habillage = site_covars$georegion, 
+             addEllipses = TRUE, 
+             mean.point = FALSE)
+```
+
+And then for narrower region
+
+```{r}
+fviz_pca_ind(covars_pca,
+             repel = TRUE,
+             axes = c(1, 2),
+             habillage = site_covars$region, 
+             addEllipses = TRUE, 
+             mean.point = FALSE)
+
+fviz_pca_ind(covars_pca,
+             repel = TRUE,
+             axes = c(1, 3),
+             habillage = site_covars$region, 
+             addEllipses = TRUE, 
+             mean.point = FALSE)
+```
+
+```{r}
+covars_pca$rotation
+```
+
+### PCA (with half as many covariates)
+
+Using the results from the hierarchical clustering of the correlations. So let's keep in: annual_precip, twi, total_phosphorous, mean_temp_driest_quart, organic_carbon, fpi, precip_driest_quart, basal_area, mean_dinural_range, bulk_density, annual_mean_temp
+
+for highly correlated clustered choosing things that have more biological meaning than others.
+
+```{r}
+site_covars_lim <- site_covars |> 
+  select(c("Site_Name",
+           "annual_precip", 
+           "annual_mean_temp",
+           "twi", 
+           "total_phosphorous",
+           "mean_temp_driest_quart", 
+           "organic_carbon", 
+           "fpi",
+           "precip_driest_quart", 
+           "basal_area_m2_ha", 
+           "mean_dinural_range", 
+           "bulk_density", 
+           "precip_seasonality"))
+
+colnames(site_covars_lim)
+```
+
+And then run the pca
+
+```{r}
+covars_lim_pca <- prcomp(site_covars_lim[,2:13], 
+                         scale = TRUE) #scale to unit variance
+```
+
+Check the eigenvectors:
+
+```{r}
+#Get eigenvalues  
+eig.val <- get_eigenvalue(covars_lim_pca) 
+eig.val 
+#scree plot to show how much variation the dimensions include 
+fviz_eig(covars_lim_pca, col.var="blue")
+
+covars_lim_pca$rotation
+```
+
+And plot:
+
+```{r}
+fviz_pca_var(covars_lim_pca, 
+             col.var = "contrib", # Color by contributions 
+             repel = TRUE) +
+  scale_colour_viridis(option = "plasma", direction = -1) #can change colour pal
+
+fviz_pca_var(covars_lim_pca, 
+             axes = c(1, 3),
+             col.var = "contrib", # Color by contributions 
+             repel = TRUE) +
+  scale_colour_viridis(option = "plasma", direction = -1) #can change colour pal
+
+fviz_pca_var(covars_lim_pca, 
+             axes = c(2,3),
+             col.var = "contrib", # Color by contributions 
+             repel = TRUE) +
+  scale_colour_viridis(option = "plasma", direction = -1) #can change colour pal
+
+
+```
+
+And also check groupings (go back to chunk and add on the groupings to df);
+
+```{r}
+fviz_pca_ind(covars_lim_pca,
+             repel = TRUE,
+             axes = c(1, 2),
+             habillage = site_covars_lim$georegion, 
+             addEllipses = TRUE, 
+             mean.point = FALSE)
+```
+
+So, this is not great... There isn't a separation of covariates in the variables we have chosen. So, let's go back and look at the rotation loadings for the full dataframe pca. In this one variables that drove the rotations were annual temp, annual precipitation and fpi. But adding all of these still doesn't result in the separation we saw previously.
+
+Let's try a more systematic way to try and get separation. By removing and adding variables. What ended up working here was similar to what was pulled out in the clusters from the hierarchical clustering, but using pca results to choose the more important variables from the clusters. The full pca is less useful because high correlations make it hard to see what's happening in the dataset.
+
+```{r}
+site_covars_lim <- site_covars |> 
+  select(c("Site_Name",
+           "georegion",
+           "mean_temp_driest_quart",
+           "precip_driest_quart",
+         # "temp_seasonality",
+           "total_nitrogen",
+         #"isothermality", isn't meaningful? and correlated with precip_driest_quart BUT 
+           "precip_coldest_quart",
+           #"precip_driest_quart", #very correlated with precip_seasonality so get rid of
+           "precip_seasonality",
+           "annual_precip",
+           "annual_mean_temp", #adding this creates high degree of space between nsw and vic/tas groups but brings these groups together
+           "basal_area_m2_ha", #including this brings vic and nnsw closer together
+          "organic_carbon", #brings all the groups closer 
+           "fpi"))
+
+
+p <- prcomp(site_covars_lim[,3:12], 
+                         scale = TRUE)
+
+fviz_pca_ind(p,
+             repel = TRUE,
+             axes = c(1, 2),
+             habillage = site_covars_lim$georegion, 
+             addEllipses = TRUE, 
+             mean.point = FALSE)
+
+
+```
+
+```{r}
+fviz_eig(p, col.var="blue")
+
+
+fviz_pca_var(p, 
+             axes = c(1, 2),
+             col.var = "contrib", # Color by contributions 
+             repel = TRUE) +
+  scale_colour_viridis(option = "plasma", direction = -1) #can change colour pal
+
+
+
+fviz_pca_var(p, 
+             axes = c(1, 3),
+             col.var = "contrib", # Color by contributions 
+             repel = TRUE) +
+  scale_colour_viridis(option = "plasma", direction = -1) #can change colour pal
+
+
+fviz_pca_var(p, 
+             axes = c(2, 3),
+             col.var = "contrib", # Color by contributions 
+             repel = TRUE) +
+  scale_colour_viridis(option = "plasma", direction = -1) #can change colour pal
+
+
+
+
+```
+
+Okay without annual_temp_temp there is good separation between the different georegions. Adding organic_carbon lowers the % of variability explained, and adding basal area makes things closer together.
+
+However, with everything except for precip_driest_quart we have the sites grouping looking very similar to that of the full dataset!!! However, using temperature seasonality makes everything similar, so there is a lot of questions on what exactly to use.
+
+So, we're not really sure if we want to include these. So, the next steps is to run a number of linear models with the narrowed down verison of variables and alpha.
+
+The last thing to do is do a check that the correlation of these variables is now low.
+
+```{r}
+#| fig-height: 6
+cor_mat <- cor(site_covars_lim[3:13])
+corrplot.mixed(cor_mat, tl.pos = "lt")
+```
+
+Precipitation of driest quarter is too correlated with precipitation seasonality so we need to chuck that out. And rerun everything.
+
+```{r}
+#| fig-height: 6
+cor_mat <- cor(site_covars_lim[3:12])
+corrplot.mixed(cor_mat, tl.pos = "lt")
+```
+
+That's a lot better, annual_temp_temp is similar to precip_seasonality but we don't know if that's important.
+
+Now, in covars_fg_size_mod.qmd will look at the relationships between site variables and the amount of clustering in the sites.
+
+## FPI, Annual Mean Temp, Annual Precipitation
+
+Although we can have all these covariates for the sites, it's a bit of a fishing expedition to fit all these sites to see the effects on our interaction coefficients.
+
+We are interested in doing something similar to Prior & Bowman's 2014 paper where they related climate productivity to the strength of competition of trees. Their climate productivity index was created through linearising mean annual temperature and the ratio of precipitation to pan evaporation to growth - this makes a single linear variables that can be used to relate to competition.
+
+We can make a similar climate index, however we first need to see how our proxy of productivity, FPI, relates to the temperature and precipitation variables we have.
+
+```{r}
+par(mar = c(5, 4, 4, 4) + 0.3)  # Leave space for z axis
+plot(site_covars$fpi, site_covars$annual_mean_temp) # first plot
+par(new = TRUE)
+plot(site_covars$fpi, site_covars$annual_precip, type = "p", axes = FALSE, xlab = "", ylab = "")
+axis(side=4, at = pretty(range(site_covars$annual_precip)))
+mtext("annual_precip", side=4, line=3)
+```
+
+### Make P:E Covariate
+
+Prior & Bowman had a covariate that was the ratio of annual precipitation to pan evaporation. We can make this covariate, and it will be useful as it is a measure of aridity.
+
+```{r}
+site_covars$P_E <- site_covars$annual_precip / site_covars$annual_actual_ET
+```
+
+```{r}
+plot(site_covars$fpi, site_covars$P_E)
+```

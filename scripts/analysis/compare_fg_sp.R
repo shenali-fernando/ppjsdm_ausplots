@@ -1,6 +1,7 @@
 library(forcats)
 library(ggbeeswarm)
 library(ggplot2)
+library(ggsignif)
 library(dplyr)
 library(ggpubr)
 
@@ -27,8 +28,6 @@ fg_preds <- read.csv("scripts/analysis/lm_fg_size_intra.csv")
 # for each, and we can see where these line up on the one-to-one line 
 
 
-
-#Get the medians for the within-sclass interactions for the a-priori (fg_size) model
 #first clean
 intra_fg_size <- fg_size %>% 
   filter(class_from == class_to)  %>% 
@@ -214,7 +213,7 @@ preds <- preds %>%
                                 "Large ↔ Large"))
 
 #plot in 
-ggplot() +  
+fig2 <- ggplot() +  
   geom_vline(xintercept = 0, colour = "black", linewidth = 0.2, linetype = "dashed") +
   geom_violin(data = intra,
               aes(x = alpha, 
@@ -255,23 +254,52 @@ ggplot() +
                                                 jitter.width = 0.05,
                                                 dodge.width = 0.75),
                 linewidth = 1) +
+  # annotate("segment", 
+  #          x = 0.45, 
+  #          xend = 0.45, 
+  #          y = 2.75,
+  #          yend = 3.25) + 
+  # annotate("segment", 
+  #          x = 1.4,
+  #          xend = 1.4, 
+  #          y = 1,
+  #          yend = 3) + 
   scale_colour_manual(values = c("Canopy" = "#440154FF", 
                                  "Subcanopy" =  "#1FA187FF"), 
-                      name = "Functional \nGroup") + 
+                      name = "Functional Group") + 
   guides(colour = guide_legend(reverse = TRUE)) +
   facet_wrap(~model, ncol = 1) + 
   theme_bw() + 
   ylab("") + 
   xlab("Interaction coefficient") + 
   theme(text = element_text(size = 12), 
-        legend.title = element_text(size = 10),
-        legend.text=element_text(size= 8), 
+        legend.title = element_text(size = 11, margin = margin(0, 20, 1, 0)),
+        legend.text=element_text(size= 10, margin = margin(r = 13, l = 7)), 
+        legend.position = "bottom", 
         axis.title.x = element_text(margin = margin(8, 0, 0, 0), 
                                     size = 12), 
-        strip.background = element_rect(fill = "gray95")) 
+        strip.background = element_rect(fill = "gray95"))
+
+fig2
 
 
-ggsave("fig1_v2.png", 
+seg_data <- data.frame(
+  x = c(0.45, 1.55, 0.45, 1.5, 1.4, 0.9, 1.1), 
+  xend = c(0.45, 1.55, 0.45, 1.5, 1.4, 0.9, 1.1), 
+  y = c(2.75, 1, 2.75, 1, 2, 1, 2.05), 
+  yend = c(3.25, 3, 3.25, 3, 3, 1.95, 3.25), 
+  model = c("Species + Size", "Species + Size", "FG + Size", "FG + Size", "Species + Size", "FG + Size", "FG + Size")
+)
+
+fig2 + geom_segment(
+  data = seg_data, 
+  mapping = aes(x = x, y = y, xend = xend, yend = yend), 
+  linewidth = 0.25
+)
+
+#save out and add segment ends in powerpoint? 
+
+ggsave("fig2.png", 
        width = 13, 
        height = 14,
        scale = 1.5,
@@ -288,6 +316,8 @@ ggsave("fig1_v2.png",
 # ** TO DO ** 
 #Would be quite nice to have a way to qualtify or look qualitatively at what is 
 #happening at the grouping level...
+
+
 
 ###########################################################################
 ##### BETWEEN GROUP COMPARISON (RAW DATA)
@@ -338,10 +368,6 @@ ggplot(
               width = 0.7,
               fill = NA,
               position = position_dodge(0.75)) +
-  geom_boxplot(colour = "black", position = position_dodge(0.75),
-               outlier.shape = NA, 
-               fill = NA,
-               width = 0.4) +
   geom_point(aes(colour = model), 
              position = position_jitterdodge(seed = 21, 
                                              jitter.width = 0.3,
@@ -349,6 +375,10 @@ ggplot(
              shape = 19, 
              size = 1.75, 
              alpha = 0.15) +
+  geom_boxplot(colour = "black", position = position_dodge(0.75),
+               outlier.shape = NA, 
+               fill = NA,
+               width = 0.4) +
   guides(colour = guide_legend(reverse = TRUE, 
                                title = "Model Groupings")) + 
   theme_bw() + 
@@ -400,7 +430,7 @@ sp <- inter %>%
              position = position_jitterdodge(seed = 21,
                                              jitter.width = 0.05,
                                              dodge.width = 0.75)) +
-  geom_linerange(data = preds_inter,
+  geom_linerange(data = preds,
                  aes(y = x,
                      x = predicted, 
                      xmin = conf.low,
@@ -412,6 +442,8 @@ sp <- inter %>%
   theme_bw() + 
   ylab("") + 
   xlab("Interaction coefficient") 
+
+ 
 
 library(patchwork)
 p <- sp_and_fg / sp + plot_annotation(tag_levels = "a") + plot_layout(axis_titles = "collect")
@@ -480,10 +512,11 @@ sp_and_fg_inter <- inter |>
         y = int, 
         groups = model)) + 
   geom_vline(xintercept = 0, colour = "black", linetype = "dashed") +
-  geom_violin(colour = "black", 
+  geom_violin(colour = "gray35", 
               scale = "width", 
-              width = 0.7,
+              width = 0.55,
               fill = NA,
+              linewidth = 0.4,
               position = position_dodge(0.75)) +
   geom_point(aes(colour =model),
              position = position_jitterdodge(seed = 21, 
@@ -513,11 +546,16 @@ sp_and_fg_inter <- inter |>
                                                  jitter.width = 0.05,
                                                  dodge.width = 0.75),
                  linewidth = 1) +
+  scale_colour_manual(values = c("#A973BA", "black")) + 
   theme_bw() + 
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)), 
+        text = element_text(size = 12.5)) + 
   ylab("") + 
   xlab("Interaction coefficient") 
 
 sp_and_fg_inter
+
+
 
 ############
 #also going to plot the between-group interactions where there is no overlap for the two model 
@@ -539,24 +577,27 @@ sp_inter <- inter %>%
     aes(x = alpha, 
         y = int)) + 
   geom_vline(xintercept = 0, colour = "black", linetype = "dashed") +
-  geom_violin(colour = "black", 
+  geom_violin(colour = "gray35", 
               scale = "width", 
-              width = 0.7,
+              width = 0.55,
               fill = NA,
+              linewidth = 0.4,
               position = position_dodge(0.75)) +
   geom_point(position = position_jitterdodge(seed = 21, 
                                              jitter.width = 0.3,
                                              dodge.width = 0.75), 
              shape = 19, 
              size = 1.75, 
-             alpha = 0.05) +
+             alpha = 0.075, 
+             colour = "black") +
   geom_point(data = b_pred,
              aes(y = group_name,
                  x = predicted),
              size = 1.7,
              position = position_jitterdodge(seed = 21,
                                              jitter.width = 0.05,
-                                             dodge.width = 0.75)) +
+                                             dodge.width = 0.75), 
+             colour = "black") +
   geom_linerange(data = b_pred,
                  aes(y = group_name,
                      x = predicted, 
@@ -565,15 +606,32 @@ sp_inter <- inter %>%
                  position = position_jitterdodge(seed = 21, 
                                                  jitter.width = 0.05,
                                                  dodge.width = 0.75),
-                 linewidth = 1) +
+                 linewidth = 1, 
+                 colour = "black") +
   theme_bw() + 
+  theme(axis.title.x = element_text(margin = margin(t = 10, r = 0, b = 0, l = 0)), 
+        text = element_text(size = 12.5)) + 
   ylab("") + 
   xlab("Interaction coefficient") 
 
 library(patchwork)
-p_inter <- sp_and_fg_inter / sp_inter + plot_annotation(tag_levels = "a") + plot_layout(axis_titles = "collect")
+
+p_inter <- sp_and_fg_inter / sp_inter + 
+  plot_annotation(tag_levels = "a") + 
+  plot_layout(axis_titles = "collect", guides = "collect") & 
+  theme(legend.position = "bottom",
+        legend.title = element_text(margin = margin(0, 20, 1, 0)), 
+        legend.text = element_text(margin = margin(r = 13, l = 7))) &
+  labs(colour = "Model")
 p_inter
 
+
+ggsave("fig5.png", 
+       dpi = 300, 
+       height = 19, 
+       width = 16.5, 
+       units = "cm", 
+       scale = 1.1)
 
 #spilt plot design 
 #additional info in splitting within-group (model-based predictions?) can use? 

@@ -31,7 +31,7 @@ site_covariates <- coords |>
   distinct()
 ```
 
-### Site Coordinates
+### Site Coordinates![](images/clipboard-9133593.png)
 
 We need the coordinates of the sites first:
 
@@ -50,6 +50,46 @@ coords <- coords |>
   relocate(lon)
 ```
 
+## Final Covariates
+
+Working from the end, we only used 3 climatic variables of the ausplots project: average mean temperature annual, annual precipitation, and evaporation. Temp and precipitation were from bioclim (go to next section):
+
+```{r}
+final_covars <- site_covariates[, c(1:4, 15)]
+```
+
+Use the BOM data to get ET and PET:
+
+```{r}
+pet <- rast("../../data/BOM_evap/etapann.txt") 
+plot(pet)
+
+et <- rast("../../data/BOM_evap/etaaann.txt")
+plot(et)
+
+
+crs(pet) #same crs as coords
+
+vals <- terra::extract(pet, coords)
+final_covars <- cbind(final_covars, vals)
+
+vals <- terra::extract(et, coords)
+final_covars <- cbind(final_covars, vals)
+```
+
+Do some cleaning:
+
+```{r}
+final_covars <- final_covars[, c(1:5, 7, 9)]
+colnames(final_covars) <- c("Site_Name", "Latitude", "Longitude", "annual_mean_temp", "annual_precip", "annual_PET", "annual_ET")
+```
+
+And save out:
+
+```{r}
+write.csv(final_covars, "final_covars.csv")
+```
+
 ### Bioclim
 
 Extract bioclim variables from geodata package
@@ -64,7 +104,7 @@ clim <- worldclim_country(country = "Australia",
 Extract values for the sites and bind back into dataframe
 
 ```{r}
-clim_vals <- extract(clim, coords)
+clim_vals <- terra::extract(clim, coords)
 ```
 
 And rename so column names are meaningful

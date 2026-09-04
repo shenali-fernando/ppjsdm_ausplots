@@ -35,6 +35,6 @@ This repo contains the analysis on the TERN AusPlots data using the saturated pa
 
     -   /model_testing: Various tests of model fit and effect including AIC and AUC tests. These are mostly found in the supplementary materials of the paper. 
 
-    -   /analysis: Scripts on the analysis of the interaction coefficients outputted by the model including comparing different models of the FG + Size and Species + Size (compare_fg_sp.R), linear modelling (linear_mod.R), creating and exploring climate covariates, and                         linear modelling climate covariates with interaction coefficients (clim_fg_size_mod.qmd, clim_sp_size_mod.qmd). All scripts in this folder were used to make final figures and numbers for the paper. 
+    -   /analysis: Scripts on the analysis of the interaction coefficients outputted by the model including comparing different models of the FG + Size and Species + Size (compare_fg_sp.R), linear modelling (linear_mod.R), creating and exploring climate covariates, and                         linear modelling climate covariates with interaction coefficients (clim_fg_size_mod.qmd, clim_sp_size_mod.qmd). This folder also includes the effects csvs from the linear modelling. All scripts in this folder were used to make final figures and numbers                       for the paper. 
 
 -   /outputs: Outputs from model specifications, subsequent analysis, and testing

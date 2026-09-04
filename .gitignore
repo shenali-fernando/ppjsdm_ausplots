@@ -66,3 +66,4 @@ scripts/analysis/tern_api_key.txt
 data/site_covariates.csv
 data/forest_productivity_index/
 data/manual_tern_tifs
+output/testings/comapre_sp+size_lm_mods.csv

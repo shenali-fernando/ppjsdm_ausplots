@@ -3,7 +3,12 @@
 
 ### Project Description
 
-This repo contains the analysis on the TERN AusPlots data using the saturated parwise interaction Gibbs point process (ppjsdm) model. The AusPlot dataset is a set of 48 1-ha plots in tall eucalypt forests that have been fully mapped for all trees larger than 10cm DBH. We have a number of expectations based on the large literature of spatial studies in tropical, subtropical, temperate deciduous and coniferous forests for the way forests should be spatially structured. Yet, there is little examination of forets in temperate broadleaf forests. The aim of this study was to understand the spatial structure of temperate broadleaf forests by way of modelling the interactions between trees in the AusPlots dataset using size, species and functional type (subcanopy or canopy) identity.
+This repo contains the analysis on the TERN AusPlots data using the saturated parwise interaction Gibbs point process (ppjsdm) model. The AusPlot dataset is a set of 48 1-ha plots in tall eucalypt forests that have been fully mapped for all trees larger than 10cm DBH. We have a number of expectations based on the large literature of spatial studies in other forests, particularly tropical and Northern Hemisphere forests, for how trees should be spatially structured. Yet, there is little examination of forests in temperate broadleaf forests. Furthermore, many spatial structure studies only take into account one factor behind the processes leading to pattern in their analysis. We aim to extend this by combination factors such as size, functional group, species, and climatic variables to understand in combination how these factors act to structure forests and if we can draw generalities in patterns of interactions from these. 
+
+
+### AusPlots Data 
+
+The data used in this study is freely available on the TERN Data Discovery Portal. Therefore please make an account TERN's platform and download the data [here](https://portal.tern.org.au/metadata/TERN/0e503109-2fb6-4182-969f-2d570abdbabd), or otherwise using the [portal](https://portal.tern.org.au/browse/datastream) search for "TERN AusPlots Forest Monitoring Network – Large Tree Survey, 2012–2015".
 
 ### File Structure
 

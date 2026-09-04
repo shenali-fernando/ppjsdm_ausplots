@@ -10,12 +10,12 @@ library(ggpubr)
 
 # Read in model specification dfs 
 #or updated sp_size model 
-sp_size <- read.csv("scripts/model_specifications/species_diameter/sp_size_df_t15_misc_updated.csv")
+sp_size <- read.csv("../../scripts/model_specifications/species_diameter/sp_size_df_t15_misc_updated.csv")
 
 #austraits <- load_austraits(version = "6.0.0", path = "data/austraits")
 
 #Load data 
-data <- read.csv("data/ausplots/data_cleaned.csv")
+data <- read.csv("../../data/ausplots/data_cleaned.csv")
 
 
 ### Thinking about this figure, we're trying to get the maximum height of the trees (as a proxy for size) and the alpha 
@@ -248,16 +248,17 @@ wa_height
 ### NE AUS
 ne_aus <- within %>% 
   filter(region == "Northeastern Australia") |> 
+  mutate(species_from = if_else(species_from == "Archontophoenix cunninghamiana", "Arch. cunninghamiana", species_from)) |> 
   mutate(size_int = fct_relevel(size_int, 
                                 "Small ↔ Small", "Small ↔ Large",  "Large ↔ Large", )) |> 
   filter(species_from %in% c("Eucalyptus pilularis","Eucalyptus grandis", "Eucalyptus microcorys",
            "Syncarpia glomulifera","Corymbia intermedia", "Allocasuarina torulosa", "Caldcluvia paniculosa",
-           "Schizomeria ovata","Ceratopetalum apetalum",  "Acacia melanoxylon", "Archontophoenix cunninghamiana",
+           "Schizomeria ovata","Ceratopetalum apetalum",  "Acacia melanoxylon", "Arch. cunninghamiana",
            "Cryptocarya glaucescens", "Cryptocarya rigida", "Cetatopetalum apetalum")) |>
    mutate(species_from = factor(species_from, levels = c( "Eucalyptus pilularis","Eucalyptus grandis",
                                                          "Eucalyptus microcorys","Syncarpia glomulifera",
                                                         "Corymbia intermedia", "Allocasuarina torulosa",  "Caldcluvia paniculosa",
-                                                         "Schizomeria ovata","Ceratopetalum apetalum",  "Acacia melanoxylon", "Archontophoenix cunninghamiana",
+                                                         "Schizomeria ovata","Ceratopetalum apetalum",  "Acacia melanoxylon", "Arch. cunninghamiana",
                                                          "Cryptocarya glaucescens", "Cryptocarya rigida", "Cetatopetalum apetalum"))) %>%
    mutate(species_from = fct_rev(species_from)) %>%
   ggplot(aes(x = alpha, 
@@ -288,18 +289,19 @@ ne_aus
 
 ne_height <- height %>% 
   filter(georegion == "NE_AUS") %>% 
+  mutate(Genus_Species = if_else(Genus_Species == "Archontophoenix cunninghamiana", "Arch. cunninghamiana", Genus_Species)) |> 
   filter(Genus_Species %in% c("Eucalyptus pilularis","Eucalyptus grandis", "Eucalyptus microcorys",
                               "Syncarpia glomulifera","Corymbia intermedia", "Allocasuarina torulosa", "Caldcluvia paniculosa",
-                              "Schizomeria ovata","Ceratopetalum apetalum",  "Acacia melanoxylon", "Archontophoenix cunninghamiana",
+                              "Schizomeria ovata","Ceratopetalum apetalum",  "Acacia melanoxylon", "Arch. cunninghamiana",
                               "Cryptocarya glaucescens", "Cryptocarya rigida", "Cetatopetalum apetalum")) %>% 
   mutate(taxon_name = factor(Genus_Species,
                              levels = c("Eucalyptus pilularis","Eucalyptus grandis", "Eucalyptus microcorys",
                                         "Syncarpia glomulifera","Corymbia intermedia", "Allocasuarina torulosa","Caldcluvia paniculosa",
-                                        "Schizomeria ovata","Ceratopetalum apetalum",  "Acacia melanoxylon", "Archontophoenix cunninghamiana",
+                                        "Schizomeria ovata","Ceratopetalum apetalum",  "Acacia melanoxylon", "Arch. cunninghamiana",
                                         "Cryptocarya glaucescens", "Cryptocarya rigida", "Cetatopetalum apetalum"))) %>%
   mutate(taxon_name = fct_rev(taxon_name)) %>%
   ggplot(aes(y = taxon_name)) +
-  geom_hline(yintercept = 9.5, colour = "black", linetype = "dashed") + 
+  geom_hline(yintercept = 8.5, colour = "black", linetype = "dashed") + 
   geom_boxplot(aes(xmin = q75, xlower = q75, xmiddle = q75, xupper = q75, xmax = max), 
                width = 0.6, 
                stat = "identity") +
@@ -329,9 +331,9 @@ fig3 <- ne_aus + ne_height + se_aus + se_height + wa_aus + wa_height +
 fig3
 
 #And save out
-ggsave("fig3.png", 
-       width = 16, 
-       height = 23, 
+ggsave("fig3.jpg", 
+       width = 16.5, 
+       height = 22, 
        scale = 1.5,
        units = "cm", dpi = 300)
 

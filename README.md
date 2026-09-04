@@ -8,7 +8,7 @@ This repo contains the analysis on the TERN AusPlots data using the saturated pa
 
 ### AusPlots Data 
 
-The data used in this study is freely available on the TERN Data Discovery Portal. Therefore please make an account TERN's platform and download the data [here](https://portal.tern.org.au/metadata/TERN/0e503109-2fb6-4182-969f-2d570abdbabd), or otherwise using the [portal](https://portal.tern.org.au/browse/datastream) search for "TERN AusPlots Forest Monitoring Network – Large Tree Survey, 2012–2015".
+The data used in this study is freely available on the TERN Data Discovery Portal. Therefore, please make an account on TERN's platform and download the data [here](https://portal.tern.org.au/metadata/TERN/0e503109-2fb6-4182-969f-2d570abdbabd), or otherwise using the [portal](https://portal.tern.org.au/browse/datastream) and search for "TERN AusPlots Forest Monitoring Network – Large Tree Survey, 2012–2015".
 
 ### File Structure
 

@@ -8,9 +8,9 @@ library(ggpubr)
 
 # Read in model specification dfs 
 #or updated sp_size model 
-sp_size <- read.csv("scripts/model_specifications/species_diameter/sp_size_df_t15_misc_updated.csv")
+sp_size <- read.csv("../../scripts/model_specifications/species_diameter/sp_size_df_t15_misc_updated.csv")
 #and fg_size model 
-fg_size <- read.csv("scripts/model_specifications/fg_size/fg_size_df_t15_updated.csv")
+fg_size <- read.csv("../../scripts/model_specifications/fg_size/fg_size_df_t15_updated.csv")
 
 
 #Also need to read in the linear model predicted coefficients 
@@ -452,10 +452,10 @@ p
 ##########################################
 ############### Instead of boxplot and violin, add the predicted lm model instead 
 #do some adding of cols and bind 
-sp_inter_preds <- read.csv("scripts/analysis/lm_sp_size_inter.csv")
+sp_inter_preds <- read.csv("lm_sp_size_inter.csv")
 
 #and for df_size
-fg_inter_preds <- read.csv("scripts/analysis/lm_fg_size_inter.csv")
+fg_inter_preds <- read.csv("lm_fg_size_inter.csv")
 
 #clean up and join together 
 fg_inter_preds$model <- "FG + Size"
@@ -507,6 +507,12 @@ sp_and_fg_inter <- inter |>
                          int == "Canopy small_Subcanopy large" ~  "Canopy small ↔ Subcanopy large",
                          int == "Canopy small_Subcanopy small" ~ "Canopy small ↔ Subcanopy small", 
                          TRUE ~ int)) |> 
+  mutate(int = as.factor(int)) |> 
+  mutate(int = fct_relevel(int,  "Canopy small ↔ Subcanopy small",
+                            "Canopy large ↔ Subcanopy small", 
+                             "Canopy small ↔ Subcanopy large",
+                           "Canopy large ↔ Subcanopy large"
+                            )) |> 
   ggplot(
     aes(x = alpha, 
         y = int, 
@@ -573,6 +579,13 @@ sp_inter <- inter %>%
                          int == "Subcanopy large_Subcanopy small" ~ "Subcanopy large ↔ Subcanopy small", 
                          int == "Subcanopy small_Subcanopy small" ~ "Subcanopy small ↔ Subcanopy small",  
                          TRUE ~ int)) |> 
+  mutate(int = as.factor(int)) |> 
+  mutate(int = fct_relevel(int, "Subcanopy small ↔ Subcanopy small", 
+                           "Subcanopy large ↔ Subcanopy small",
+                           "Subcanopy large ↔ Subcanopy large",
+                           "Canopy small ↔ Canopy small", 
+                           "Canopy large ↔ Canopy small", 
+                           "Canopy large ↔ Canopy large")) |> 
   ggplot(
     aes(x = alpha, 
         y = int)) + 
@@ -626,7 +639,7 @@ p_inter <- sp_and_fg_inter / sp_inter +
 p_inter
 
 
-ggsave("fig5.png", 
+ggsave("fig5.jpg", 
        dpi = 300, 
        height = 19, 
        width = 16.5, 

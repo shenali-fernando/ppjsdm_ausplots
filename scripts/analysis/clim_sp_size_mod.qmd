@@ -1,0 +1,128 @@
+---
+title: "Species + Size climate linear model"
+format: html
+editor: visual
+---
+
+# Species + Size Model: Climatic Linear Model
+
+```{r}
+library(glm)
+library(performance)
+library(ggeffects)
+library(dplyr)
+```
+
+\
+NOTE: Go through the qmd titled clim_fg_size_mod.qmd. This quarto doc goes through the workflow for building the climatic linear model in detail. The workflow used here will be the same as this.
+
+## Load data
+
+Load the covariates
+
+```{r}
+site_covars <- read.csv("../../data/final_covars.csv")
+
+#Need to add in a covariate we can make: 
+site_covars$P_E <- site_covars$annual_precip / site_covars$annual_PET
+```
+
+Load the model alpha coefficients
+
+```{r}
+sp_size <- read.csv("scripts/model_specifications/species_diameter/sp_size_df_t15_misc_updated.csv")
+```
+
+## Clean data and attach together
+
+Clean the species + size model. First for intraspecific interactions only:
+
+```{r}
+fg_size <- fg_size %>% 
+  filter(species_from == species_to)  
+```
+
+And then clean names:
+
+```{r}
+sp_size <- sp_size |> 
+  rename(Site_Name = site) |> 
+  mutate(size_int = case_when(size_int == "small_small" ~ "Small ↔ Small", 
+                              size_int == "small_large" ~ "Small ↔ Large", 
+                              size_int == "large_large" ~ "Large ↔ Large")) |>
+  mutate(size_int = as.factor(size_int)) |> 
+  mutate(size_int = fct_relevel(size_int, "Small ↔ Small", 
+                                "Small ↔ Large", 
+                                "Large ↔ Large")) |> 
+  select(c("Site_Name",
+           "alpha", 
+           "size_int", 
+           "class_from", 
+           "species_from"))
+```
+
+Attach together:
+
+```{r}
+covars <- full_join(site_covars, 
+                    sp_size, 
+                    by = "Site_Name")
+```
+
+And then scale and center the climatic variables:
+
+```{r}
+range(site_covars$annual_mean_temp)
+range(site_covars$annual_precip)
+range(site_covars$P_E)
+```
+
+```{r}
+covars$annual_precip <- scale(covars$annual_precip)
+range(covars$annual_precip)
+
+covars$annual_mean_temp <- scale(covars$annual_mean_temp)
+range(covars$annual_mean_temp)
+
+covars$P_E <- scale(covars$P_E)
+range(covars$P_E)
+```
+
+## Load formulas
+
+Load the csv of formula terms to test through all the options. We probably should use the formula from the FG + Size model, however it is good to check what the difference is.
+
+```{r}
+forms <- read.csv("formulas_var.csv")
+```
+
+And knowing that we're using P:E instead of annual precipitation:
+
+```{r}
+forms_pe <- forms |> 
+  mutate(across(everything(), ~ #tilde when giving function
+                  str_replace_all(., "annual_precip", "P_E")))
+```
+
+## Run GLM Model
+
+glmm or glm??
+
+Compared to the FG + Size model there is less going on. For the Species + Size model only canopy large-large and small-small show that no matter the temp, the more water loss there is the more repulsed things are.
+
+Notes from FG + Size:\
+For small-small for both canopy and subcanopy, the higher P:E (less water loss) the more repulsed things are no matter the temperature.
+
+For large-large this pattern is more based on temperature...
+
+Higher P:E = more precipitation than evaporation = more water available
+
+It makes sense that these models had different patterns because of how the groups are made: groups are very specific (large and small is even more specific to species) in the species + size model, while the fg + size model is an overview of many species at once (combining small canopy species and large subcanopy species into overall groups)...
+
+Depending on the model chosen, can get an increase of 2.3% or 3.6% in variation explained when adding climate from base class + size + class\*size
+
+So, it's a combination of variables of productivity index, some form of temp and some form of rainfall that results in significant effects on alpha... However this is chucking everything into the model in hopes that it gets somewhere so I don't think this is very great. especially for small - large mods, having literally all the variables in hoping it'll explain the variation, of course it does but when you look at the effects its isnt convincing
+
+However, what is actually interesting is the Canopy large-large and canopy small-small alpha was significantly effected by temperature and rainfall. There was no effects on canopy small-large... probably because small things are not actually poles/saplings. speaking to tolerance?? i think this is interesting + simple to describe, works well with whats going on in the model alpha reporting part...
+
+how to visualise??

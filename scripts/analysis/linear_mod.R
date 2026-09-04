@@ -7,6 +7,7 @@ library(performance)
 library(tidyr)
 library(DHARMa) 
 library(gtsummary)
+library(emmeans)
 
 ### LINEAR MODELLING 
 
@@ -15,9 +16,10 @@ library(gtsummary)
 
 #Load alpha coefficients 
 #updated sp_size model 
-sp_size <- read.csv("scripts/model_specifications/species_diameter/sp_size_df_t15_misc_updated.csv")
+sp_size <- read.csv("../../scripts/model_specifications/species_diameter/sp_size_df_t15_misc_updated.csv")
 #and fg_size model 
-fg_size <- read.csv("scripts/model_specifications/fg_size/fg_size_df_t15_updated.csv")
+fg_size <- read.csv("../../scripts/model_specifications/fg_size/fg_size_df_t15_updated.csv")
+
 
 #for intraspecific species + size:
 intra <- sp_size %>% 
@@ -27,17 +29,15 @@ intra <- sp_size %>%
 intra <- intra |> 
   rename(FG = class_from)
 
-intra <- intra |> 
-  rename(`Size Interaction` = size_int)
 
 
-#rename size_ints levels
+ #rename size_ints levels
 intra <- intra %>% 
-  mutate(`Size Interaction` = case_when(`Size Interaction` == "small_small" ~ "Small ↔ Small", 
-                                `Size Interaction` == "small_large" ~ "Small ↔ Large", 
-                                `Size Interaction` == "large_large" ~ "Large ↔ Large")) %>% 
-  mutate(`Size Interaction` = as.factor(`Size Interaction`)) %>% 
-  mutate(`Size Interaction` = fct_relevel(`Size Interaction`, "Small ↔ Small", 
+  mutate(size_int = case_when(size_int == "small_small" ~ "Small ↔ Small", 
+                              size_int %in% c("small_large") ~ "Small ↔ Large", 
+                              size_int   == "large_large" ~ "Large ↔ Large")) %>% 
+  mutate(size_int = as.factor(size_int)) %>% 
+  mutate(size_int = fct_relevel(size_int, "Small ↔ Small", 
                               "Small ↔ Large", 
                               "Large ↔ Large"
                               )) %>% 
@@ -59,10 +59,10 @@ hist(intra$alpha)
 
 #use package glmtmb
 mod1 <- glmmTMB(alpha ~
-                1 + `Size Interaction` + FG + `Size Interaction`:FG + (1|species_from) + (1|site), 
+                1 + size_int + FG + size_int:FG + (1|species_from) + (1|site), 
                 data = intra)
 
-summary(mod1)
+ summary(mod1)
 
 table_sp <- tbl_regression(mod1, 
                intercept = T,  
@@ -120,12 +120,12 @@ p1
 
 ### visualisation 
 
-ggeffect(mod1, terms = c("size_int", "class_from")) %>% 
+ggeffect(mod1, terms = c("size_int", "FG")) %>% 
   plot(show_data = TRUE, jitter = TRUE)
 
 
 
-ggpredict(mod1, terms = c("size_int", "class_from")) %>% 
+ggpredict(mod1, terms = c("size_int", "FG")) %>% 
   plot(show_data = TRUE, 
        jitter = TRUE, 
        dot_size = 3, line_size = 1.5,
@@ -159,6 +159,13 @@ write.csv(intra_pred_df,"intra_pred_df_updatedmod.csv")
 #table in supplement?? visualise 
 
 
+#Also need to know what groups are significantly different from each other 
+mod1_testpred <- test_predictions(mod1, 
+                 terms = c("size_int", "FG"))
+
+predict_response(mod1, 
+                 terms = c("size_int", "FG"))
+
 ################################################################################
 
 ### also want to do a similar thing for the fg + size model
@@ -177,9 +184,9 @@ intra_fg <- intra_fg |>
 #rename size_ints  
 intra_fg <- intra_fg %>% 
   mutate(`Size Interaction` = case_when(`Size Interaction` == "small small" ~ "Small ↔ Small", 
-                                `Size Interaction` == "small large" ~ "Small ↔ Large", 
-                                `Size Interaction` == "large large" ~ "Large ↔ Large")) %>% 
-  mutate(`Size Interaction` = as.factor(`Size Interaction`)) %>% 
+                                        `Size Interaction` == "small large" ~ "Small ↔ Large", 
+                                        `Size Interaction` == "large large" ~ "Large ↔ Large")) %>% 
+  mutate(`Size Interaction`= as.factor(`Size Interaction`)) %>% 
   mutate(`Size Interaction` = fct_relevel(`Size Interaction`, "Small ↔ Small", 
                                 "Small ↔ Large", 
                                 "Large ↔ Large"
@@ -191,7 +198,7 @@ intra_fg <- intra_fg %>%
 
 #make linear mod
 lm_fg <- glmmTMB(alpha ~
-                  1 + `Size Interaction` + FG + `Size Interaction`:FG + (1|site), 
+                  1 + size_int + FG + size_int:FG + (1|site), 
                 data = intra_fg) 
 
 table_fg <-  tbl_regression(lm_fg,
@@ -241,8 +248,8 @@ testDispersion(lm_fg) #tests if the simulated dispersion is equal to the observe
 r <- simulateResiduals(lm_fg, n= 1000, plot = TRUE)
 
 
-#ggpredict and visualise 
-ggpredict(lm_fg, terms = c("size_int", "class_from")) %>% 
+#ggpredict and visualise
+ggpredict(lm_fg, terms = c("size_int", "FG")) %>% 
   plot(show_data = TRUE, 
        jitter = TRUE, 
        dot_size = 3, line_size = 1.5,
@@ -272,6 +279,20 @@ ggpredict(lm_fg, terms = c("size_int", "class_from")) %>%
 pred <- ggpredict(lm_fg, terms = c("size_int", "class_from"))
 intra_pred_df <-as.data.frame(pred)
 write.csv(intra_pred_df,"lm_fg_size_intra.csv")
+
+
+
+#Also need to know what groups are significantly different from each other 
+lmfg_testpred <- test_predictions(lm_fg, 
+                 terms = c("size_int", "FG"))
+
+predict_response(lm_fg, 
+                 terms = c("size_int", "FG"))
+
+
+
+
+
 
 
 
@@ -319,8 +340,13 @@ inter_mod1_sp <- glm(alpha ~
 inter_mod_sp <- glm(alpha ~ 
                       1 + group, 
                     data = inter_sp)
+
+mod1 <- glmmTMB(alpha ~ 1 + group + (1 |site), 
+                data = inter_sp)
+
+compare_performance(inter_mod_sp, mod1)
 ## visualise 
-ggpredict(inter_mod_sp, terms = c("group")) %>% 
+ggpredict(mod1, terms = c("group")) %>% 
   plot(show_data = TRUE, 
        jitter = TRUE, 
        dot_size = 3, line_size = 1.5,
